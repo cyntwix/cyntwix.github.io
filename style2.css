@@ -3,7 +3,7 @@ body {
 	margin: 40px auto;
 	max-width: 650px;
 	line-height: 1.6;
-	font-size: 18px;
+	font-size: 20px;
 	color: rgb(65, 177, 43);
     padding: 0 10px;
     text-align: right;
@@ -27,15 +27,24 @@ img {
     margin: 0 auto;
 }
 
-h1,h2,h3 {
-    line-height: 1.2;
-    text-align: left;
+h1,h2 {
+	line-height: 1.2;
+	text-align: left:
 
 
 }
 
+h2.left { 
+    text-align: left;
+}
+
+h2.right { 
+    text-align: right;
+}
+
 h3 {
-	font-weight: normal;
+	line-height: 1.2;
+    text-align: right;
 }
 
 li {
