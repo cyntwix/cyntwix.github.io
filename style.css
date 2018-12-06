@@ -9,6 +9,22 @@ body {
     text-align: center;
 }
 
+a:link {
+	color:rgb(65, 177, 43);
+ }
+
+a:active {
+	color:rgb(65, 177, 43);
+}
+
+a:visited {
+	color:rgb(65, 177, 43);
+}
+
+a:hover {
+	color:rgb(65, 177, 43);
+}
+
 nav {
 	text-align: center;
 }
@@ -47,4 +63,11 @@ footer p {
 
 footer a {
 	text-decoration: none;
+}
+
+body {
+	background-image: url("static.jpg");
+	background-repeat: repeat;
+	background-color: #000000;
+	
 }
