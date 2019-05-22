@@ -3,7 +3,7 @@
 <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="chrome=1">
-        <link rel="stylesheet" href="style2.css">
+        <link rel="stylesheet" href="home.css">
         <title>Portal</title>
         <nav><a href="index.html">HOME</a></nav>
         <link rel = "icon" href="icon.png">
@@ -20,14 +20,23 @@
 }
 
 /* Create two equal columns that floats next to each other */
-.column {
-    float: left;
-    width: 50%;
-    padding: 10px;/* Should be removed. Only for demonstration */
-}
+
 
 /* Clear floats after the columns */
 .row:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+.bolumn {
+    float: left;
+    width: 30%;
+    padding: 1px;/* Should be removed. Only for demonstration */
+}
+
+/* Clear floats after the columns */
+.bow:after {
     content: "";
     display: table;
     clear: both;
@@ -36,15 +45,26 @@
 </head>
 <body>
         <div class="row">
+                
                 <div class="column">
-                        <img src="eye.gif" alt="straight outta troy" style="width:70%;height:70%;"></img>
+                        <img src="uno.jpg" alt="straight outta troy" style="width:100%;height:100%;"></img>
                 </div>
                 <div class="column">
-                        <img src="eye2.gif" alt="straight outta troy" style="width:70%;height:70%;"></img>
+                        <img src="uno.jpg" alt="straight outta troy" style="width:100%;height:100%;"></img>
                 </div>
+                <div class="column">
+                        <img src="uno.jpg" alt="straight outta troy" style="width:100%;height:100%;"></img>
+                </div>
+                <div class="column">
+                        <img src="uno.jpg" alt="straight outta troy" style="width:100%;height:100%;"></img>
+                </div>
+                <div class="column">
+                        <img src="uno.jpg" alt="straight outta troy" style="width:100%;height:100%;"></img>
+                </div>
+                <img src="complete.gif" alt="straight outta troy" style="width:100%;height:100%;"></img>
+
+              
               </div>
-              <img src="eye.gif" alt="straight outta troy" style="width:40%;height:40%;"></img>
-    <img src="champ.gif" alt="straight outta troy" style="width:40%;height:40%;"></img>
 
 <div class="row">
   <div class="column" >

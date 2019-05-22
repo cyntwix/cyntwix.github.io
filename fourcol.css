@@ -1,5 +1,6 @@
 body {
 	background-color: rgb(0, 0, 0);
+	
 	margin: 40px auto;
 	max-width: 800px;
 	line-height: 1.6;
@@ -31,6 +32,7 @@ a:hover {
 
 p a{
 	text-decoration:none;
+	
 }
 
 nav a{ 
@@ -81,7 +83,7 @@ footer a {
 }
 
 body {
-	background-image: url("static.gif");
+	background-image: url("static_.jpg");
 	background-repeat: repeat;
 	background-color: #000000;
 	

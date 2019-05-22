@@ -86,11 +86,24 @@ body {
 .column {
 	float: left;
 	width: 33.33%;
-	padding: 5px;
+	padding: 15px;
   }
   
   /* Clear floats after image containers */
   .row::after {
+	content: "";
+	clear: both;
+	display: table;
+  }
+
+  .bolumn {
+	float: left;
+	width: 33.33%;
+	padding: 15px;
+  }
+  
+  /* Clear floats after image containers */
+  .bow::after {
 	content: "";
 	clear: both;
 	display: table;
