@@ -1,16 +1,12 @@
 body {
 	background-color: rgb(0, 0, 0);
 	margin: 40px auto;
-	max-width: 1000px;
+	max-width: 650px;
 	line-height: 1.6;
-	font-size: 20px;
+	font-size: 18px;
 	color: rgb(65, 177, 43);
     padding: 0 10px;
-    text-align: right;
-}
-
-nav {
-	text-align: center;
+    text-align: center;
 }
 
 a:link {
@@ -29,6 +25,10 @@ a:hover {
 	color:rgb(65, 177, 43);
 }
 
+nav {
+	text-align: center;
+}
+
 p a{
 	text-decoration:none;
 }
@@ -43,24 +43,18 @@ img {
     margin: 0 auto;
 }
 
-h1,h2 {
+h1,h2,h3 {
+    text-align: center;
 	line-height: 1.2;
-	text-align: left:
-
-
-}
-
-h2.left { 
-    text-align: left;
-}
-
-h2.right { 
-    text-align: right;
 }
 
 h3 {
-	line-height: 1.2;
-    text-align: right;
+	color: rgb(255,255,255);
+	font-weight: normal;
+}
+
+p{
+	color:rgb(65, 177, 43);
 }
 
 li {
@@ -77,34 +71,7 @@ footer a {
 }
 
 body {
-	background-image: url("static_.jpg");
 	background-repeat: repeat;
 	background-color: #000000;
 	
 }
-
-.column {
-	float: left;
-	width: 20%;
-	padding: 5px;
-  }
-  
-  /* Clear floats after image containers */
-  .row::after {
-	content: "";
-	clear: both;
-	display: table;
-  }
-
-  .bolumn {
-	float: left;
-	width: 33.33%;
-	padding: 15px;
-  }
-  
-  /* Clear floats after image containers */
-  .bow::after {
-	content: "";
-	clear: both;
-	display: table;
-  }
