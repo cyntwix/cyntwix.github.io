@@ -1,0 +1,110 @@
+-body {
+	background-color: rgb(0, 0, 0);
+	margin: 40px auto;
+	max-width: 1000px;
+	line-height: 1.6;
+	font-size: 20px;
+	color: rgb(65, 177, 43);
+    padding: 0 10px;
+    text-align: right;
+}
+
+nav {
+	text-align: center;
+}
+
+a:link {
+	color:rgb(65, 177, 43);
+ }
+
+a:active {
+	color:rgb(65, 177, 43);
+}
+
+a:visited {
+	color:rgb(65, 177, 43);
+}
+
+a:hover {
+	color:rgb(65, 177, 43);
+}
+
+p a{
+	text-decoration:none;
+}
+
+nav a{ 
+	text-decoration: none;
+	padding: 0 15px;
+}
+
+img {
+    display: block;
+    margin: 0 auto;
+}
+
+h1,h2 {
+	line-height: 1.2;
+	text-align: left:
+
+
+}
+
+h2.left { 
+    text-align: left;
+}
+
+h2.right { 
+    text-align: right;
+}
+
+h3 {
+	line-height: 1.2;
+    text-align: right;
+}
+
+li {
+	font-weight: normal;
+}
+
+footer p {
+	text-align: right;
+	line-height: .6;
+}
+
+footer a {
+	text-decoration: none;
+}
+
+body {
+	background-image: url("static_.jpg");
+	background-repeat: repeat;
+	background-color: #000000;
+	
+}
+
+.column {
+	float: left;
+	width: 20%;
+	padding: 5px;
+  }
+  
+  /* Clear floats after image containers */
+  .row::after {
+	content: "";
+	clear: both;
+	display: table;
+  }
+
+  .bolumn {
+	float: left;
+	width: 33.33%;
+	padding: 15px;
+  }
+  
+  /* Clear floats after image containers */
+  .bow::after {
+	content: "";
+	clear: both;
+	display: table;
+  }
