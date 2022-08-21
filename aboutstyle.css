@@ -4,7 +4,8 @@ body {
 	max-width: 650px;
 	line-height: 1.6;
 	font-size: 18px;
-	color: rgb(65, 177, 43);
+	color: rgb(256,256,256);
+	/*color: rgb(65, 177, 43);*/
     padding: 0 10px;
     text-align: center;
 }
@@ -73,5 +74,6 @@ body {
 }
 
 span {
-	background-color: #960000
+	/*background-color: #960000*/
+	background-color: #000000
 }
