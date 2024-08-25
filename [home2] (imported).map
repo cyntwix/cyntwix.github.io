@@ -1,0 +1,12 @@
+<img src="[home2] (imported)" width="1000" height="1000" border="0" usemap="#map" />
+
+<map name="map">
+<!-- #$-:Image map file created by GIMP Image Map plug-in -->
+<!-- #$-:GIMP Image Map plug-in by Maurits Rijk -->
+<!-- #$-:Please do not edit lines starting with "#$" -->
+<!-- #$VERSION:2.3 -->
+<!-- #$AUTHOR:adams -->
+<area shape="rect" coords="3,309,999,455" href="about.html" />
+<area shape="rect" coords="5,624,1000,740" href="activities.html" />
+<area shape="rect" coords="1,906,997,1006" href="contact.html" />
+</map>
