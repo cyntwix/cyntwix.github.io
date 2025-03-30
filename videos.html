@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Videos - NIGHTMARE!</title>
+  <style>
+    body {
+      background-color: black;
+      background-image: url('static.gif');
+      background-repeat: repeat;
+      color: #00ffff;
+      font-family: "Courier New", monospace;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+      cursor: url('cursor.cur'), crosshair;
+    }
+	nav {
+      background-color: #222;
+      padding: 10px;
+      font-size: 20px;
+      border-bottom: 3px solid #ff00ff;
+    }
+    nav a {
+      color: #00ffff;
+      margin: 0 15px;
+      text-decoration: none;
+      font-weight: bold;
+      border: 1px dashed #ff0000;
+      padding: 20px 40px;
+      background-color: #000;
+      animation: blink 0.8s infinite alternate;
+      font-size: 48px;
+      display: inline-block;
+    }
+    nav a:hover {
+      background-color: #ff00ff;
+      color: #000;
+    }
+    h1 {
+      font-size: 60px;
+      color: red;
+      background: #000;
+      padding: 30px;
+      border-bottom: 4px dashed lime;
+      text-shadow: 2px 2px magenta;
+    }
+    #hover-title {
+      font-size: 28px;
+      color: #ff00ff;
+      background-color: rgba(0, 0, 0, 0.8);
+      padding: 10px;
+      border: 2px solid lime;
+      margin-top: 10px;
+      min-height: 40px;
+    }
+    .grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      padding: 30px;
+    }
+    .video-thumb {
+      width: 320px;
+      height: 180px;
+      background-color: #111;
+      border: 5px ridge #ff00ff;
+      position: relative;
+      cursor: pointer;
+      overflow: hidden;
+      transition: transform 0.2s ease-in-out, filter 0.2s;
+    }
+    .video-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .video-thumb:hover {
+      transform: scale(1.05) rotate(-1deg);
+      filter: contrast(150%) brightness(120%) hue-rotate(20deg);
+      box-shadow: 0 0 30px #00ffcc, 0 0 60px #ff00ff;
+      border-color: #00ffcc;
+    }
+    .crt-frame {
+      padding: 10px;
+      background: repeating-linear-gradient(0deg, #111, #111 2px, #222 2px, #222 4px);
+      box-shadow: inset 0 0 20px lime, 0 0 40px red;
+      border: 5px double #ff00ff;
+      width: 340px;
+      margin: auto;
+    }
+    .crt-frame iframe {
+      display: block;
+      width: 100%;
+      height: 180px;
+      border: none;
+    }
+    footer {
+      background-color: #111;
+      color: #ff00ff;
+      padding: 15px;
+      border-top: 2px dotted lime;
+    }
+    a.back {
+      display: inline-block;
+      color: yellow;
+      background-color: #000;
+      padding: 10px 20px;
+      margin-top: 20px;
+      border: 2px dashed #00ffff;
+      text-decoration: none;
+      font-weight: bold;
+      animation: blink 1s infinite alternate;
+    }
+    @keyframes blink {
+      from { opacity: 1; }
+      to { opacity: 0.4; }
+    }
+  </style>
+</head>
+<body>
+  <h1>VIDEO ARCHIVE</h1>
+      <nav>
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="videos.html">Videos</a>
+    <a href="contact.html">Contact</a>
+  </nav>
+  <div id="hover-title"></div>
+
+  <div class="grid">
+    <!-- Example thumbnails -->
+    <div class="video-thumb" data-id="alQNx0ceCzU" data-title="Lily Talmers - My Mortal Wound">
+      <img src="https://img.youtube.com/vi/alQNx0ceCzU/hqdefault.jpg" alt="Video 1">
+    </div>
+	
+    <div class="video-thumb" data-id="gpFsfQlkiAs" data-title="Lily Talmers - Life's So Fun">
+      <img src="https://img.youtube.com/vi/gpFsfQlkiAs/hqdefault.jpg" alt="Video 2">
+    </div>
+	
+    <div class="video-thumb" data-id="2GNermXRfW8" data-title="Lily Talmers - Prayer For Nearly Nothing">
+      <img src="https://img.youtube.com/vi/2GNermXRfW8/hqdefault.jpg" alt="Video 3">
+    </div>
+	
+	    <div class="video-thumb" data-id="IR3O3-4_Ubg" data-title="Lily Talmers - Best of Times">
+      <img src="https://img.youtube.com/vi/IR3O3-4_Ubg/hqdefault.jpg" alt="Video 4">
+    </div>
+	
+	    <div class="video-thumb" data-id="9zI8pF6S-RI" data-title="Eight Carl - Torgo Kills/Torgo Lives">
+      <img src="https://img.youtube.com/vi/9zI8pF6S-RI/hqdefault.jpg" alt="Video 3">
+    </div>
+	
+	    <div class="video-thumb" data-id="hOguQb-k22I" data-title="waxing away indifference bleeds heartache in a birdsong">
+      <img src="https://img.youtube.com/vi/hOguQb-k22I/hqdefault.jpg" alt="Video 3">
+    </div>
+	
+	    <div class="video-thumb" data-id="cSI8bUAfnWI" data-title="shared flight, silent echoes">
+      <img src="https://img.youtube.com/vi/cSI8bUAfnWI/hqdefault.jpg" alt="Video 3">
+    </div>
+	
+	    <div class="video-thumb" data-id="HVYqS1dICm0" data-title="my mind is gossamer, my legs are trees">
+      <img src="https://img.youtube.com/vi/HVYqS1dICm0/hqdefault.jpg" alt="Video 3">
+    </div>
+	
+	    <div class="video-thumb" data-id="O7I9RpXeSaw" data-title="Help! My Roommate's A Monster!">
+      <img src="https://img.youtube.com/vi/O7I9RpXeSaw/hqdefault.jpg" alt="Video 3">
+    </div>
+		    <div class="video-thumb" data-id="3jCfcEKLvU8" data-title="Color of the Year - Hippie Summer Camp">
+      <img src="https://img.youtube.com/vi/3jCfcEKLvU8/hqdefault.jpg" alt="Video 3">
+    </div>
+		
+	    <div class="video-thumb" data-id="cFcHj81zGs0" data-title="dust motes in a sunbeam">
+      <img src="https://img.youtube.com/vi/cFcHj81zGs0/hqdefault.jpg" alt="Video 3">
+    </div>
+		
+	    <div class="video-thumb" data-id="MLAGSNympJ8" data-title="Sonifying the Thawing Great Lakes">
+      <img src="https://img.youtube.com/vi/MLAGSNympJ8/hqdefault.jpg" alt="Video 3">
+    </div>
+	    <div class="video-thumb" data-id="41o1Xgtui9I" data-title="Life After Work">
+      <img src="https://img.youtube.com/vi/41o1Xgtui9I/hqdefault.jpg" alt="Video 3">
+    </div>
+	
+	    <div class="video-thumb" data-id="c13Fe905lVs" data-title="Quiet Remains">
+      <img src="https://img.youtube.com/vi/c13Fe905lVs/hqdefault.jpg" alt="Video 3">
+    </div>
+	
+	    <div class="video-thumb" data-id="F6bJBp4rzvk" data-title="i'd rather remain in my dreams; at least there i can't think about you; how do i go on from here?">
+      <img src="https://img.youtube.com/vi/F6bJBp4rzvk/hqdefault.jpg" alt="Video 3">
+    </div>
+	
+	    <div class="video-thumb" data-id="xBeVeAeClkU" data-title="The Security Deposit">
+      <img src="https://img.youtube.com/vi/xBeVeAeClkU/hqdefault.jpg" alt="Video 3">
+    </div>
+	
+	    <div class="video-thumb" data-id="vXqSd1hKWrs" data-title="The Bada-Ba-Ba-Ba's - sparks">
+      <img src="https://img.youtube.com/vi/vXqSd1hKWrs/hqdefault.jpg" alt="Video 3">
+    </div>
+	
+	    <div class="video-thumb" data-id="mTyq5__0fCI" data-title="july 16th 2013">
+      <img src="https://img.youtube.com/vi/mTyq5__0fCI/hqdefault.jpg" alt="Video 3">
+    </div>
+	
+	    <div class="video-thumb" data-id="6-IH3xzIPq0" data-title="once again">
+      <img src="https://img.youtube.com/vi/6-IH3xzIPq0/hqdefault.jpg" alt="Video 3">
+    </div>
+	
+	    <div class="video-thumb" data-id="yJcetqNbJIE" data-title="why should you expect to comprehend?">
+      <img src="https://img.youtube.com/vi/yJcetqNbJIE/hqdefault.jpg" alt="Video 3">
+    </div>
+	
+	    <div class="video-thumb" data-id="fxjCKMlMfek" data-title="women want me. fish fear me.">
+      <img src="https://img.youtube.com/vi/fxjCKMlMfek/hqdefault.jpg" alt="Video 3">
+    </div>
+		
+	    <div class="video-thumb" data-id="xC7Pv5TDT9w" data-title="THE SHOEGAZE SHOW S1E1">
+      <img src="https://img.youtube.com/vi/xC7Pv5TDT9w/hqdefault.jpg" alt="Video 3">
+    </div>
+		
+	    <div class="video-thumb" data-id="kHpaVnxLyRI" data-title="lets just forget about christmas">
+      <img src="https://img.youtube.com/vi/kHpaVnxLyRI/hqdefault.jpg" alt="Video 3">
+    </div>
+		
+
+	
+    <!-- Add more as needed -->
+  </div>
+
+  <a class="back" href="index.html">RETURN TO THE CORE</a>
+
+  <footer>
+    <p>© 1997-2025 My Epic Website. Broadcast signal intrusions welcome.</p>
+	<p>1312</p>
+  </footer>
+
+  <script>
+    const titleBox = document.getElementById('hover-title');
+
+    document.querySelectorAll('.video-thumb').forEach(el => {
+      el.addEventListener('click', () => {
+        const id = el.getAttribute('data-id');
+        el.outerHTML = `<div class='crt-frame'><iframe src='https://www.youtube.com/embed/${id}?autoplay=1' allowfullscreen></iframe></div>`;
+        titleBox.textContent = '';
+      });
+      el.addEventListener('mouseover', () => {
+        titleBox.textContent = el.getAttribute('data-title');
+      });
+      el.addEventListener('mouseout', () => {
+        titleBox.textContent = '';
+      });
+    });
+  </script>
+</body>
+</html>

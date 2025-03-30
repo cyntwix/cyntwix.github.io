@@ -1,41 +1,108 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
-	
 <head>
-	<link rel="stylesheet" href="aboutstyle.css">
-	<title>Who is this?</title>
-	<nav><a href="index.html">HOME</a></nav>
-	<hr>
-	<hr>
-	<hr>
-	<hr>
+  <title>About Me - NIGHTMARE!</title>
+  <style>
+    body {
+      background-color: black;
+      background-image: url('static.gif');
+      background-repeat: repeat;
+      color: #ff66ff;
+      font-family: "Courier New", monospace;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      cursor: url('cursor.cur'), crosshair;
+    }
+	    nav {
+      background-color: #222;
+      padding: 10px;
+      font-size: 20px;
+      border-bottom: 3px solid #ff00ff;
+    }
+    nav a {
+      color: #00ffff;
+      margin: 0 15px;
+      text-decoration: none;
+      font-weight: bold;
+      border: 1px dashed #ff0000;
+      padding: 20px 40px;
+      background-color: #000;
+      animation: blink 0.8s infinite alternate;
+      font-size: 48px;
+      display: inline-block;
+    }
+    nav a:hover {
+      background-color: #ff00ff;
+      color: #000;
+    }
+    h1 {
+      font-size: 60px;
+      color: lime;
+      background: #ff00ff;
+      padding: 30px;
+      border: 5px dotted cyan;
+      text-shadow: 2px 2px 5px red;
+    }
+    .content {
+      background-color: rgba(0,0,0,0.7);
+      border: 5px double #00ffff;
+      margin: 30px;
+      padding: 40px;
+      font-size: 24px;
+      color: #fff;
+    }
+    a {
+      color: yellow;
+      font-weight: bold;
+      text-decoration: none;
+      animation: blink 0.8s infinite alternate;
+    }
+    a:hover {
+      color: red;
+      background: white;
+    }
+    .gif {
+      margin: 20px;
+    }
+    footer {
+      background-color: #222;
+      color: magenta;
+      font-size: 18px;
+      padding: 10px;
+      border-top: 3px dashed lime;
+    }
+    @keyframes blink {
+      from { opacity: 1; }
+      to { opacity: 0.3; }
+    }
+  </style>
 </head>
-
 <body>
-	
-	<div class="wrapper">
-			<header>
-					<h1 style="color:white;">ABOUT</h1>
-			</header>
-			<section>
-					<img src="newface.png" alt="a nice lookin dude" style="width:70%;height:70%;"></img>
-					
-					<hr>
-					<h2><span>this is a guy from michigan, currently in boston</span></h2>
-					<h2><span>he has an interest in photography and video</span></h2>
-					<h2><span>pls reach out and say hi!</span></h2>
-					
-					
-					
-					<hr>
-					<p></p>
-				
+  <h1>ABOUT</h1>
+  
+    <nav>
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="videos.html">Videos</a>
+    <a href="contact.html">Contact</a>
+  </nav>
 
-		
-	</div>
-</body>
+  <div class="content">
+    <div class="gif">
+		<img src="newface.png" alt="who is this" style="width:25%;height:25%;">
+    </div>
+    <p>his name is <strong>ADAM</strong></p>
+    <p>this is a guy from michigan, currently in boston</p>
+    <p>he has an interest in photography and video</p>
+    <p>pls reach out and say hi!</p>
 
+    <p><a href="index.html">Go back to the chaos</a></p>
+  </div>
 
-</center>
+  <footer>
+    <p>© 1997-2025 My Epic Website. You can't stop what's already begun.</p>
+	<p>1312</p>
+  </footer>
 </body>
 </html>
