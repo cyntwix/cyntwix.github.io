@@ -1,0 +1,367 @@
+:root {
+  --ink: #100d10;
+  --vellum: #f8efd1;
+  --gold: #d7a526;
+  --red: #b93a31;
+  --blue: #194f9a;
+  --green: #196d55;
+  --white: #fff8df;
+  --shadow: rgba(16, 13, 16, 0.44);
+}
+
+@font-face {
+  font-family: "Peristiwa";
+  src: url("fonts/Peristiwa.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  color: var(--white);
+  font-family: Georgia, "Times New Roman", serif;
+  background:
+    radial-gradient(circle at 14% 14%, rgba(215, 165, 38, 0.22), transparent 24%),
+    radial-gradient(circle at 82% 18%, rgba(25, 79, 154, 0.22), transparent 22%),
+    radial-gradient(circle at 62% 82%, rgba(185, 58, 49, 0.16), transparent 26%),
+    linear-gradient(rgba(16, 13, 16, 0.6), rgba(16, 13, 16, 0.9)),
+    url("static_.jpg"),
+    var(--ink);
+  background-repeat: no-repeat, no-repeat, no-repeat, repeat, repeat, repeat;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 12px;
+  border: 2px double rgba(215, 165, 38, 0.62);
+  pointer-events: none;
+  z-index: 5;
+}
+
+a {
+  color: inherit;
+}
+
+img {
+  max-width: 100%;
+}
+
+.about-header {
+  width: min(1180px, calc(100% - 32px));
+  min-height: 82px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid rgba(248, 239, 209, 0.24);
+}
+
+.sigil {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--gold);
+  border-radius: 50%;
+  color: var(--gold);
+  text-decoration: none;
+  font-size: 2rem;
+  line-height: 1;
+  background: rgba(16, 13, 16, 0.78);
+  box-shadow: 0 0 26px rgba(215, 165, 38, 0.32);
+}
+
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+nav a,
+.marginalia a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border: 1px solid rgba(248, 239, 209, 0.32);
+  border-radius: 999px;
+  text-decoration: none;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  background: rgba(16, 13, 16, 0.62);
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, color 180ms ease, background 180ms ease;
+}
+
+nav a:hover,
+nav a:focus-visible,
+.marginalia a:hover,
+.marginalia a:focus-visible {
+  color: var(--gold);
+  border-color: var(--gold);
+  box-shadow: 0 0 24px rgba(215, 165, 38, 0.3);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+main {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: clamp(42px, 7vw, 96px) 0 48px;
+}
+
+.about-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(300px, 0.82fr);
+  align-items: center;
+  gap: clamp(28px, 6vw, 84px);
+}
+
+.copy {
+  display: grid;
+  gap: 22px;
+}
+
+.kicker {
+  margin: 0;
+  color: var(--gold);
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+p,
+figure {
+  margin: 0;
+}
+
+h1 {
+  color: var(--vellum);
+  font-family: "Peristiwa", Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  font-size: clamp(5rem, 14vw, 11rem);
+  line-height: 0.78;
+  text-shadow: 0 0 34px rgba(215, 165, 38, 0.36);
+}
+
+.subhead {
+  max-width: 46rem;
+  color: rgba(255, 248, 223, 0.86);
+  font-family: "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+  font-style: italic;
+  font-size: clamp(1.18rem, 2.2vw, 1.95rem);
+  line-height: 1.25;
+}
+
+.identity-mark {
+  width: min(520px, 100%);
+  padding: 10px;
+  border: 1px solid rgba(215, 165, 38, 0.46);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(16, 13, 16, 0.2), rgba(248, 239, 209, 0.08), rgba(16, 13, 16, 0.2)),
+    rgba(16, 13, 16, 0.54);
+  box-shadow: inset 0 0 22px rgba(215, 165, 38, 0.14);
+}
+
+.identity-mark img {
+  display: block;
+  width: 100%;
+  mix-blend-mode: screen;
+}
+
+.portrait-relic {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  isolation: isolate;
+}
+
+.portrait-relic::before,
+.portrait-relic::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.portrait-relic::before {
+  inset: -18px;
+  z-index: -2;
+  border-radius: 14px;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255, 248, 223, 0.26), transparent 54%),
+    radial-gradient(ellipse at 50% 100%, rgba(215, 165, 38, 0.28), transparent 58%),
+    radial-gradient(ellipse at 0% 50%, rgba(215, 165, 38, 0.2), transparent 56%),
+    linear-gradient(135deg, rgba(215, 165, 38, 0.28), rgba(255, 248, 223, 0.08), rgba(185, 58, 49, 0.12));
+  filter: blur(12px);
+}
+
+.portrait-relic::after {
+  inset: -34px;
+  z-index: -3;
+  background: conic-gradient(from 25deg, rgba(185, 58, 49, 0.34), rgba(25, 79, 154, 0.32), rgba(25, 109, 85, 0.3), rgba(215, 165, 38, 0.34), rgba(185, 58, 49, 0.34));
+  filter: blur(30px);
+  opacity: 0.6;
+}
+
+.portrait-relic img {
+  width: min(520px, 100%);
+  display: block;
+  border: 1px solid rgba(215, 165, 38, 0.58);
+  border-radius: 8px;
+  background: rgba(16, 13, 16, 0.82);
+  box-shadow:
+    inset 0 0 0 1px rgba(248, 239, 209, 0.12),
+    0 16px 34px var(--shadow);
+}
+
+.portrait-relic figcaption {
+  color: rgba(255, 248, 223, 0.72);
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+}
+
+.ledger {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: clamp(38px, 7vw, 82px) 0 18px;
+}
+
+.ledger article {
+  min-height: 220px;
+  display: grid;
+  align-content: space-between;
+  gap: 24px;
+  padding: 22px;
+  border: 1px solid rgba(248, 239, 209, 0.3);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(248, 239, 209, 0.1), transparent 48%),
+    rgba(16, 13, 16, 0.58);
+}
+
+.ledger span {
+  color: var(--gold);
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.82rem;
+}
+
+.ledger h2 {
+  color: var(--vellum);
+  font-family: "Peristiwa", Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  font-size: clamp(2.3rem, 4.8vw, 4.4rem);
+  line-height: 0.86;
+}
+
+.ledger p {
+  color: rgba(255, 248, 223, 0.78);
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.marginalia {
+  min-height: 140px;
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: clamp(20px, 4vw, 32px);
+  border-top: 1px solid rgba(248, 239, 209, 0.28);
+  border-bottom: 1px solid rgba(248, 239, 209, 0.28);
+  background: rgba(16, 13, 16, 0.54);
+}
+
+.marginalia img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  mix-blend-mode: screen;
+}
+
+.marginalia p {
+  color: var(--vellum);
+  font-family: "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+  font-style: italic;
+  font-size: clamp(1.3rem, 3vw, 2.6rem);
+  line-height: 1.08;
+}
+
+.marginalia a {
+  color: var(--ink);
+  background: var(--gold);
+  border-color: var(--gold);
+}
+
+footer {
+  width: min(1180px, calc(100% - 32px));
+  min-height: 88px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  color: rgba(255, 248, 223, 0.72);
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+footer span {
+  width: 86px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  box-shadow: 0 0 18px rgba(215, 165, 38, 0.7);
+}
+
+footer img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  mix-blend-mode: screen;
+}
+
+@media (max-width: 900px) {
+  .about-header,
+  nav {
+    justify-content: center;
+  }
+
+  .about-header {
+    flex-direction: column;
+    padding: 18px 0;
+  }
+
+  .about-hero,
+  .ledger,
+  .marginalia {
+    grid-template-columns: 1fr;
+  }
+
+  .about-hero,
+  .copy {
+    justify-items: center;
+    text-align: center;
+  }
+
+  .marginalia {
+    justify-items: center;
+    text-align: center;
+  }
+}

@@ -1,0 +1,26 @@
+[Unit]
+Description=Cyntwix submissions API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/srv/cyntwix
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=CYNTWIX_HOST=127.0.0.1
+Environment=CYNTWIX_PORT=8000
+Environment=CYNTWIX_DB=/var/lib/cyntwix/entries.db
+ExecStart=/usr/bin/python3 /srv/cyntwix/server.py
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/cyntwix
+
+[Install]
+WantedBy=multi-user.target

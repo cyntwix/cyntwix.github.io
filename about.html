@@ -1,108 +1,71 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>About Me - NIGHTMARE!</title>
-  <style>
-    body {
-      background-color: black;
-      background-image: url('static.gif');
-      background-repeat: repeat;
-      color: #ff66ff;
-      font-family: "Courier New", monospace;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-      cursor: url('cursor.cur'), crosshair;
-    }
-	    nav {
-      background-color: #222;
-      padding: 10px;
-      font-size: 20px;
-      border-bottom: 3px solid #ff00ff;
-    }
-    nav a {
-      color: #00ffff;
-      margin: 0 15px;
-      text-decoration: none;
-      font-weight: bold;
-      border: 1px dashed #ff0000;
-      padding: 20px 40px;
-      background-color: #000;
-      animation: blink 0.8s infinite alternate;
-      font-size: 48px;
-      display: inline-block;
-    }
-    nav a:hover {
-      background-color: #ff00ff;
-      color: #000;
-    }
-    h1 {
-      font-size: 60px;
-      color: lime;
-      background: #ff00ff;
-      padding: 30px;
-      border: 5px dotted cyan;
-      text-shadow: 2px 2px 5px red;
-    }
-    .content {
-      background-color: rgba(0,0,0,0.7);
-      border: 5px double #00ffff;
-      margin: 30px;
-      padding: 40px;
-      font-size: 24px;
-      color: #fff;
-    }
-    a {
-      color: yellow;
-      font-weight: bold;
-      text-decoration: none;
-      animation: blink 0.8s infinite alternate;
-    }
-    a:hover {
-      color: red;
-      background: white;
-    }
-    .gif {
-      margin: 20px;
-    }
-    footer {
-      background-color: #222;
-      color: magenta;
-      font-size: 18px;
-      padding: 10px;
-      border-top: 3px dashed lime;
-    }
-    @keyframes blink {
-      from { opacity: 1; }
-      to { opacity: 0.3; }
-    }
-  </style>
-</head>
-<body>
-  <h1>ABOUT</h1>
-  
-    <nav>
-    <a href="index.html">Home</a>
-    <a href="about.html">About</a>
-    <a href="videos.html">Videos</a>
-    <a href="contact.html">Contact</a>
-  </nav>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>About / Cyntwix</title>
+    <link rel="icon" href="icon.png">
+    <link rel="stylesheet" href="pre2010.css">
+  </head>
+  <body>
+    <header class="about-header">
+      <a class="sigil" href="index.html" aria-label="Cyntwix home">AS</a>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="videos.html">Videos</a>
+        <a href="writing.html">Words</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </header>
 
-  <div class="content">
-    <div class="gif">
-		<img src="newface.png" alt="who is this" style="width:25%;height:25%;">
-    </div>
-    <p>his name is <strong>ADAM</strong></p>
-    <p>this is a guy from michigan, currently in boston</p>
-    <p>he has an interest in photography and video</p>
-    <p>pls reach out and say hi!</p>
+    <main>
+      <section class="about-hero" aria-labelledby="about-title">
+        <div class="copy">
+          <p class="kicker">field note / self-index</p>
+          <h1 id="about-title">About</h1>
+          <p class="subhead">A simple place of texture</p>
+          <div class="identity-mark" aria-label="Image mark">
+            <img src="name_title.gif" alt="">
+          </div>
+        </div>
 
-    <p><a href="index.html">Go back to the chaos</a></p>
-  </div>
+        <figure class="portrait-relic">
+          <img src="newface.png" alt="Glitched portrait">
+        </figure>
+      </section>
 
-  <footer>
-    <p>© 1997-2025 My Epic Website. You can't stop what's already begun.</p>
-	<p>1312</p>
-  </footer>
-</body>
+      <section class="ledger" aria-label="About notes">
+        <article>
+          <span>01</span>
+          <h2>Source</h2>
+          <p>Michigan, Boston, lake light, basements.</p>
+        </article>
+        <article>
+          <span>02</span>
+          <h2>Construction</h2>
+          <p>Video, photography, hand prints.</p>
+        </article>
+        <article>
+          <span>03</span>
+          <h2>Signal</h2>
+          <p>Best reached by telepathy. or email.</p>
+        </article>
+      </section>
+
+      <section class="marginalia" aria-label="Marginalia">
+        <img src="champ.gif" alt="">
+        <p>This is not a biography.</p>
+        <a href="contact.html">telepathize</a>
+      </section>
+    </main>
+
+    <footer>
+      <span></span>
+      <img src="eye.gif" alt="">
+      <p>ABOUT / 2026</p>
+      <img src="eye2.gif" alt="">
+      <span></span>
+    </footer>
+  </body>
 </html>
