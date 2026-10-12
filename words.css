@@ -18,7 +18,8 @@ main {
 }
 @media (max-width: 820px) {
   /* leave the tablets visible above the form on small screens */
-  main { padding-top: 38vh; }
+  main { padding-top: 50vh; }
+  .panel.generator, .panel.entries-panel { background: rgba(12, 7, 1, 0.95); }
   .panel.generator, .panel.entries-panel { margin: 0 auto; }
 }
 

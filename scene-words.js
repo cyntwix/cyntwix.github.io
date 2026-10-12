@@ -185,7 +185,29 @@
   }
 
   // one or two even rows, centred, nearest row lowest
+  const narrow = () => innerWidth <= 820;
+  const stack = { rows: 1, width: 12 };
   function arrange(texts) {
+    // phones: rows of three, stacked up a slope so every row shows
+    if (narrow()) {
+      const per = 3, R = Math.ceil(texts.length / per), spots = [];
+      let widest = 0;
+      for (let r = 0; r < R; r++) {
+        const row = texts.slice(r * per, (r + 1) * per);
+        const gap = 0.6;
+        const total = row.reduce((sum, t) => sum + tabletWidth(t), 0) + gap * (row.length - 1);
+        widest = Math.max(widest, total);
+        let x = -total / 2;
+        const back = R - 1 - r;       // first words at the back, top of the slope
+        row.forEach((t) => {
+          const w = tabletWidth(t);
+          spots.push({ x: x + w / 2, z: 4 - back * 3.2, y: back * 2.35 });
+          x += w + gap;
+        });
+      }
+      stack.rows = R; stack.width = widest;
+      return spots;
+    }
     const rows = texts.length > 5 ? 2 : 1;
     const per = Math.ceil(texts.length / rows);
     const spots = [];
@@ -367,6 +389,8 @@
 
   const fx = { flash: 0, fever: 0 };
   let panelW = 0;
+  const strip = { top: 60, bottom: 400 };
+  const mob = { d: 30, y: 5.6, look: 2.4 };
   const plate = P.create({
     scene, camera, fov: [50, 64], clean: true,
     onResize(vw, vh) {
@@ -375,6 +399,14 @@
       panelW = wide && panel ? panel.getBoundingClientRect().right : 0;
       // slide the view so the tablets sit in the space beside the panel
       if (panelW) camera.setViewOffset(vw, vh, -panelW / 2, 0, vw, vh);
+      // phones: centre the tablets in the gap between the header and the form
+      if (!wide) {
+        const hdr = document.querySelector('.site-header');
+        const top = hdr ? hdr.getBoundingClientRect().bottom : 60;
+        const bottom = vh * 0.5;
+        strip.top = top; strip.bottom = bottom;
+        camera.setViewOffset(vw, vh, 0, vh / 2 - (top + bottom) / 2, vw, vh);
+      }
     },
     omens: {
       texts: MODE === 'words'
@@ -413,8 +445,23 @@
   plate.run((dt, t) => {
     // ease after the cursor
     look.update(dt, t);
-    camera.position.set(look.x * 2.4, 5.6 + look.y * 0.8 + Math.sin(t * 0.3) * 0.06, CAM_Z);
-    camera.lookAt(LOOK_AT.x + look.x * 1.2, LOOK_AT.y + look.y * 0.6, LOOK_AT.z);
+    if (narrow()) {
+      // pull back far enough that the whole stack fits the strip, both ways
+      const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
+      const frac = Math.max(0.2, (strip.bottom - strip.top) / innerHeight);
+      const stackH = (stack.rows - 1) * 2.35 + 3.4;
+      const dV = (stackH / 2) / (tanV * frac) * 1.18;
+      const dH = (stack.width / 2 + 0.8) / (tanV * camera.aspect);
+      const lookY = (stack.rows - 1) * 1.15 + 1.6;
+      const lookZ = 4 - (stack.rows - 1) * 1.6;
+      mob.d = P.damp(mob.d, Math.max(dV, dH, 14), 2, dt);
+      mob.look = P.damp(mob.look, lookY, 2, dt);
+      camera.position.set(look.x * 1.2, mob.look + mob.d * 0.2 + look.y * 0.5, lookZ + mob.d);
+      camera.lookAt(look.x * 0.6, mob.look + look.y * 0.3, lookZ);
+    } else {
+      camera.position.set(look.x * 2.4, 5.6 + look.y * 0.8 + Math.sin(t * 0.3) * 0.06, CAM_Z);
+      camera.lookAt(LOOK_AT.x + look.x * 1.2, LOOK_AT.y + look.y * 0.6, LOOK_AT.z);
+    }
 
     const hit = pointer.x < 5 ? pick(pointer) : null;
     const hk = hit ? hit.userData.tablet : null;

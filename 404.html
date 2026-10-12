@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>404</title>
+    <!-- GitHub Pages serves this page at whatever address was asked for
+         (/some/deep/path), so everything resolves from the site root.
+         Opened from disk, it resolves from this folder instead. -->
+    <base href="/">
+    <script>if (location.protocol === 'file:') document.querySelector('base').href = './';</script>
+    <link rel="icon" href="assets/icon.png">
+    <link rel="stylesheet" href="plate.css">
+    <style>
+      .pin[data-home] strong { letter-spacing: 0.2em; }
+      .fallback-only { max-width: 520px; margin: 120px auto 0; padding: 0 16px; text-align: center; }
+      .fallback-only p { font-size: 64px; margin: 0 0 20px; color: #e0b643; }
+    </style>
+  </head>
+  <body class="scene-locked">
+    <header class="site-header" aria-label="Site navigation">
+      <a class="sigil" href="index.html" aria-label="Cyntwix home">AS</a>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="videos.html">Videos</a>
+        <a href="writing.html">Words</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </header>
+
+    <canvas id="plate" aria-label="Page not found. A dark plain where the number 404 is laid out in standing stones under a searching eye. One gate still stands; it leads home."></canvas>
+    <h1 class="sr-only">404: nothing here</h1>
+
+    <div class="pin" data-home><strong>Home</strong></div>
+
+    <div class="fallback-only">
+      <p>404</p>
+      <a href="index.html">Home</a>
+    </div>
+
+    <script src="three.js"></script>
+    <script src="assets.js"></script>
+    <script src="plate.js"></script>
+    <script src="scene-404.js"></script>
+  </body>
+</html>

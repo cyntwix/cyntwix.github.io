@@ -45,7 +45,8 @@
   Object.assign(sunLight.shadow.camera, { left: -210, right: 210, top: 120, bottom: -60, near: 1, far: 900 });
   sunLight.shadow.bias = -0.0015;
   scene.add(sunLight, sunLight.target);
-  scene.add(new THREE.HemisphereLight(0x3a4a78, 0x1c0c06, 2.2));
+  const hemi = new THREE.HemisphereLight(0x3a4a78, 0x1c0c06, 2.2);
+  scene.add(hemi);
 
   // the stair
   const STAIR_AZ = -0.34, STAIR_DIST = 175, STAIR_HEIGHT = 240;
@@ -59,6 +60,9 @@
     uniforms: {
       uTime: { value: 0 }, uSun: { value: sunDir }, uVortex: { value: vortexDir },
       uFlash: { value: 0 }, uHorizon: { value: HORIZON },
+      uMid: { value: new THREE.Color(0.17, 0.09, 0.15) }, uZen: { value: new THREE.Color(0.025, 0.04, 0.10) },
+      uCloudDark: { value: new THREE.Color(0.22, 0.09, 0.10) }, uCloudLit: { value: new THREE.Color(1.0, 0.56, 0.24) },
+      uSunTint: { value: new THREE.Color(1, 1, 1) }, uStars: { value: 1 },
     },
     vertexShader: /* glsl */ `
       varying vec3 vDir;
@@ -68,8 +72,8 @@
         gl_Position.z = gl_Position.w;
       }`,
     fragmentShader: /* glsl */ `
-      uniform float uTime, uFlash;
-      uniform vec3 uSun, uVortex, uHorizon;
+      uniform float uTime, uFlash, uStars;
+      uniform vec3 uSun, uVortex, uHorizon, uMid, uZen, uCloudDark, uCloudLit, uSunTint;
       varying vec3 vDir;
       ${P.GLSL_NOISE}
       void main() {
@@ -77,8 +81,8 @@
         float h = d.y;
         float az = atan(d.x, -d.z);
 
-        vec3 zen = vec3(0.025, 0.04, 0.10);
-        vec3 mid = vec3(0.17, 0.09, 0.15);
+        vec3 zen = uZen;
+        vec3 mid = uMid;
         vec3 col = mix(uHorizon, mid, smoothstep(0.0, 0.22, h));
         col = mix(col, zen, smoothstep(0.18, 0.8, h));
         col = mix(col, uHorizon * 0.55, smoothstep(0.0, -0.08, h));
@@ -91,7 +95,7 @@
         float sd = acos(clamp(dot(d, uSun), -1.0, 1.0));
         float R = 0.165;
         float sunNear = exp(-sd * 2.0);
-        col = mix(col, mix(vec3(0.22, 0.09, 0.10), vec3(1.0, 0.56, 0.24), sunNear), cloud * 0.85);
+        col = mix(col, mix(uCloudDark, uCloudLit, sunNear), cloud * 0.85);
 
         vec3 vx = normalize(cross(vec3(0.0, 1.0, 0.0), uVortex));
         vec3 vy = cross(uVortex, vx);
@@ -109,7 +113,7 @@
         vec2 sf = fract(sg) - 0.5;
         float star = step(0.985, hash(sc)) * smoothstep(0.25, 0.6, h) * (1.0 - vort);
         float cross_ = max(step(abs(sf.x), 0.06) * step(abs(sf.y), 0.4), step(abs(sf.y), 0.06) * step(abs(sf.x), 0.4));
-        col += vec3(0.9, 0.84, 0.66) * star * cross_ * 0.8;
+        col += vec3(0.9, 0.84, 0.66) * star * cross_ * 0.8 * uStars;
 
         vec3 sx = normalize(cross(vec3(0.0, 1.0, 0.0), uSun));
         vec3 sy = cross(uSun, sx);
@@ -117,8 +121,8 @@
         float sa = atan(sp.y, sp.x);
         float spokes = pow(abs(sin(sa * 34.0)), 22.0) + 0.7 * pow(abs(sin(sa * 9.0 + 0.6)), 40.0);
         float outside = step(R, sd);
-        col += vec3(0.95, 0.52, 0.2) * spokes * smoothstep(R * 5.0, R, sd) * outside * 0.95;
-        col += vec3(0.85, 0.32, 0.12) * exp(-(sd - R) * 7.0) * outside * 0.7;
+        col += vec3(0.95, 0.52, 0.2) * uSunTint * spokes * smoothstep(R * 5.0, R, sd) * outside * 0.95;
+        col += vec3(0.85, 0.32, 0.12) * uSunTint * exp(-(sd - R) * 7.0) * outside * 0.7;
         if (sd < R) {
           float k = sd / R;
           float limb = sqrt(1.0 - k * k);
@@ -126,7 +130,7 @@
           vec3 disc = mix(vec3(0.5, 0.06, 0.03), vec3(1.0, 0.56, 0.2), limb);
           disc *= 0.7 + 0.55 * spots;
           disc = mix(disc, vec3(0.07, 0.02, 0.02), smoothstep(0.63, 0.68, spots));
-          col = disc;
+          col = disc * uSunTint;
         }
 
         col += uFlash * vec3(0.95, 0.9, 1.0) * (0.25 + 0.75 * vort + 0.4 * cloud);
@@ -140,13 +144,14 @@
 
   // ---- the eye inside the sun
   const eyeMat = new THREE.ShaderMaterial({
-    uniforms: { map: { value: P.texture('eye_sheet.png') }, uFrame: { value: 0 }, uBlink: { value: 0 } },
+    uniforms: { map: { value: P.texture('eye_sheet.png') }, uFrame: { value: 0 }, uBlink: { value: 0 }, uTint: { value: new THREE.Color(1, 1, 1) } },
     vertexShader: /* glsl */ `
       varying vec2 vUv;
       void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
     fragmentShader: /* glsl */ `
       uniform sampler2D map;
       uniform float uFrame, uBlink;
+      uniform vec3 uTint;
       varying vec2 vUv;
       void main() {
         float open = 1.0 - uBlink;
@@ -157,7 +162,7 @@
         vec4 t = texture2D(map, suv);
         if (t.a < 0.5) discard;
         float l = dot(t.rgb, vec3(0.3, 0.59, 0.11));
-        vec3 tint = mix(vec3(0.06, 0.0, 0.01), vec3(1.0, 0.66, 0.3), smoothstep(0.08, 0.85, l));
+        vec3 tint = mix(vec3(0.06, 0.0, 0.01), vec3(1.0, 0.66, 0.3) * uTint, smoothstep(0.08, 0.85, l));
         gl_FragColor = vec4(tint, 1.0);
       }`,
     depthTest: false, depthWrite: false, fog: false,
@@ -418,6 +423,56 @@
       hover: 0,
     });
   });
+
+  // ---------------------------------------------------------------- time of day (preview)
+
+  // The sky and light follow the visitor's own clock; the sun never moves.
+  // ?hour=N in the address forces an hour, for checking how one looks.
+  const params = new URLSearchParams(location.search);
+  const C = (r, g, b) => new THREE.Color(r, g, b);
+  const KEYS = [
+    { h: 0,    hor: C(0.08, 0.08, 0.14), mid: C(0.04, 0.045, 0.1),  zen: C(0.008, 0.012, 0.035), cd: C(0.06, 0.06, 0.1),   cl: C(0.45, 0.5, 0.65), tint: C(0.55, 0.75, 1.25), sunC: 0x9fb4ff, sunI: 3.2, hs: 0x2a3560, hg: 0x0a0806, hi: 1.2, stars: 1.7, fog: 0.0052 },
+    { h: 5,    hor: C(0.22, 0.12, 0.18), mid: C(0.1, 0.08, 0.18),   zen: C(0.02, 0.03, 0.08),    cd: C(0.15, 0.08, 0.14), cl: C(0.85, 0.5, 0.5),  tint: C(1.0, 0.75, 0.95),  sunC: 0xff9aa0, sunI: 5,   hs: 0x405080, hg: 0x140a08, hi: 1.5, stars: 0.9, fog: 0.005 },
+    { h: 7,    hor: C(0.5, 0.28, 0.2),   mid: C(0.24, 0.16, 0.22),  zen: C(0.06, 0.08, 0.16),    cd: C(0.25, 0.14, 0.15), cl: C(1.0, 0.65, 0.42), tint: C(1.0, 1.1, 1.15),   sunC: 0xffa070, sunI: 7,   hs: 0x5a6898, hg: 0x241810, hi: 1.9, stars: 0.2, fog: 0.0042 },
+    { h: 12.5, hor: C(0.46, 0.36, 0.26), mid: C(0.24, 0.24, 0.3),   zen: C(0.08, 0.12, 0.22),    cd: C(0.3, 0.26, 0.24),  cl: C(0.95, 0.85, 0.65), tint: C(1.0, 1.35, 1.9),  sunC: 0xffe6c0, sunI: 7.5, hs: 0x6a7898, hg: 0x3a2c1e, hi: 2.0, stars: 0.0, fog: 0.0036 },
+    { h: 16,   hor: C(0.46, 0.27, 0.16), mid: C(0.21, 0.15, 0.19),  zen: C(0.05, 0.07, 0.15),    cd: C(0.25, 0.14, 0.13), cl: C(1.0, 0.65, 0.35), tint: C(1.0, 1.15, 1.35),  sunC: 0xffb070, sunI: 7.5, hs: 0x4a5a8a, hg: 0x241408, hi: 2.1, stars: 0.3, fog: 0.004 },
+    { h: 18.5, hor: C(0.42, 0.2, 0.12),  mid: C(0.17, 0.09, 0.15),  zen: C(0.025, 0.04, 0.10),   cd: C(0.22, 0.09, 0.10), cl: C(1.0, 0.56, 0.24), tint: C(1, 1, 1),          sunC: 0xff8a4a, sunI: 7.5, hs: 0x3a4a78, hg: 0x1c0c06, hi: 2.2, stars: 1.0, fog: 0.0042 },
+    { h: 20.5, hor: C(0.3, 0.09, 0.08),  mid: C(0.1, 0.04, 0.1),    zen: C(0.015, 0.02, 0.06),   cd: C(0.12, 0.05, 0.08), cl: C(0.85, 0.3, 0.15), tint: C(1.0, 0.6, 0.55),   sunC: 0xff5030, sunI: 5,   hs: 0x303c6c, hg: 0x100806, hi: 1.5, stars: 1.4, fog: 0.0048 },
+    { h: 24,   hor: C(0.08, 0.08, 0.14), mid: C(0.04, 0.045, 0.1),  zen: C(0.008, 0.012, 0.035), cd: C(0.06, 0.06, 0.1),   cl: C(0.45, 0.5, 0.65), tint: C(0.55, 0.75, 1.25), sunC: 0x9fb4ff, sunI: 3.2, hs: 0x2a3560, hg: 0x0a0806, hi: 1.2, stars: 1.7, fog: 0.0052 },
+  ];
+  const _ca = new THREE.Color(), _cb = new THREE.Color();
+  function setHour(hour) {
+    hour = ((hour % 24) + 24) % 24;
+    let i = 0;
+    while (i < KEYS.length - 2 && KEYS[i + 1].h <= hour) i++;
+    const A = KEYS[i], B = KEYS[i + 1];
+    const k0 = (hour - A.h) / (B.h - A.h);
+    const k = k0 * k0 * (3 - 2 * k0);
+    const lerp = (a, b) => a + (b - a) * k;
+    // the sun never moves: only the light changes
+    const u = skyMat.uniforms;
+    u.uHorizon.value.copy(A.hor).lerp(B.hor, k);
+    u.uMid.value.copy(A.mid).lerp(B.mid, k);
+    u.uZen.value.copy(A.zen).lerp(B.zen, k);
+    u.uCloudDark.value.copy(A.cd).lerp(B.cd, k);
+    u.uCloudLit.value.copy(A.cl).lerp(B.cl, k);
+    u.uSunTint.value.copy(A.tint).lerp(B.tint, k);
+    u.uStars.value = lerp(A.stars, B.stars);
+    scene.fog.color.copy(u.uHorizon.value);
+    scene.fog.density = lerp(A.fog, B.fog);
+    sunLight.color.copy(_ca.set(A.sunC)).lerp(_cb.set(B.sunC), k);
+    sunLight.intensity = lerp(A.sunI, B.sunI);
+    hemi.color.copy(_ca.set(A.hs)).lerp(_cb.set(B.hs), k);
+    hemi.groundColor.copy(_ca.set(A.hg)).lerp(_cb.set(B.hg), k);
+    hemi.intensity = lerp(A.hi, B.hi);
+    eyeMat.uniforms.uTint.value.copy(u.uSunTint.value);
+  }
+  const clockHour = () => { const d = new Date(); return d.getHours() + d.getMinutes() / 60; };
+  let hourNow = params.has('hour') ? parseFloat(params.get('hour')) : clockHour();
+  setHour(hourNow);
+  // keep up as the evening goes on
+  if (!params.has('hour')) setInterval(() => setHour(clockHour()), 60000);
+
 
   // ---------------------------------------------------------------- plate + input
 

@@ -30,7 +30,8 @@
   Object.assign(sun.shadow.camera, { left: -60, right: 60, top: 40, bottom: -40, near: 1, far: 240 });
   sun.shadow.bias = -0.002;
   scene.add(sun, sun.target);
-  scene.add(new THREE.HemisphereLight(0x6670a8, 0x3a1c0e, 1.7));
+  const hemi = new THREE.HemisphereLight(0x6670a8, 0x3a1c0e, 1.7);
+  scene.add(hemi);
 
   // ---------------------------------------------------------------- stone
 
@@ -74,6 +75,7 @@
   // pillars, torches on every other one, an arcade over them
   const BAY = 8;
   const torches = [];
+  const torchFlames = [];   // each flame: sprite, hit box, which light, how lit
   for (let z = NAVE_START + 10; z < NAVE_END; z += BAY) {
     for (const side of [-1, 1]) {
       const x = side * PILLAR_X;
@@ -91,6 +93,12 @@
         fl.scale.set(1.3, 2.2, 1);
         fl.position.set(side * (PILLAR_X - 1.4), 10.9, z);
         scene.add(fl);
+        // a generous invisible target, the flame alone is a small thing to hit
+        const hit = new THREE.Mesh(new THREE.BoxGeometry(2.6, 4, 2.6), new THREE.MeshBasicMaterial({ visible: false }));
+        hit.position.copy(fl.position);
+        scene.add(hit);
+        torchFlames.push({ fl, hit, light: torches.length, lit: 1, want: 1, z });
+        hit.userData.torchIndex = torchFlames.length - 1;
       }
       const torch = new THREE.PointLight(0xff8a3a, 34, 26, 1.3);
       torch.position.set(0, 11, z);
@@ -319,8 +327,121 @@
   const pickMouth = P.picker(camera, [mouth], 90);
   const look = P.follow(plate, {
     yaw: 0.16, pitch: 0.07, rate: 1.2,
-    onTap(pointer) { if (pickMouth(pointer)) goToMouth(); },
+    onTap(pointer) {
+      if (dark.phase) return;
+      if (pickMouth(pointer)) { goToMouth(); return; }
+      const hit = pickTorch(pointer);
+      if (hit) snuff(hit.userData.torchIndex);
+    },
   });
+
+  // ---------------------------------------------------------------- the dark (easter egg)
+  // Put out every torch you can see and the room goes dark around the face.
+  // Then the eye. Then it all comes back as if nothing happened.
+  const pickTorch = P.picker(camera, torchFlames.map((f) => f.hit), 120);
+  const dark = { phase: null, t0: 0, k: 0, face: 0, eye: 0 };
+  const DUSK0 = DUSK.clone(), BLACK = new THREE.Color(0.004, 0.003, 0.004);
+  const base = { hemi: hemi.intensity, sun: sun.intensity };
+
+  // a hard light from low and to one side, only on the face
+  const faceLight = new THREE.SpotLight(0xffd2a0, 0, 60, 0.32, 0.35, 0.6);
+  faceLight.position.set(-9, 3, BACK_Z + 22);
+  faceLight.target.position.copy(reliefCenter);
+  scene.add(faceLight, faceLight.target);
+  const rimLight = new THREE.SpotLight(0x9ab0ff, 0, 50, 0.3, 0.4, 0.6);
+  rimLight.position.set(12, 26, BACK_Z + 12);
+  rimLight.target.position.copy(reliefCenter);
+  scene.add(rimLight, rimLight.target);
+
+  // the eye, for the end
+  const flashMat = new THREE.ShaderMaterial({
+    uniforms: { map: { value: P.texture('eye_sheet.png') }, uFrame: { value: 0 }, uGain: { value: 0 }, uHue: { value: 0 } },
+    vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+    fragmentShader: `
+      uniform sampler2D map; uniform float uFrame, uGain, uHue; varying vec2 vUv;
+      void main() {
+        float c = mod(uFrame, 3.0), r = floor(uFrame / 3.0);
+        vec4 t = texture2D(map, vec2((c + vUv.x) / 3.0, 1.0 - (r + 1.0 - vUv.y) / 2.0));
+        if (t.a < 0.5) discard;
+        vec3 hot = mix(vec3(1.0, 0.35, 0.1), vec3(0.6, 0.85, 1.0), uHue);
+        gl_FragColor = vec4(t.rgb * hot * uGain + vec3(0.25) * uGain, 1.0);
+      }`,
+    depthTest: false, depthWrite: false, fog: false, transparent: true,
+  });
+  const flashEye = new THREE.Mesh(new THREE.PlaneGeometry(1, 111 / 255), flashMat);
+  flashEye.renderOrder = 50;
+  flashEye.visible = false;
+  flashEye.layers.set(1);   // drawn sharp, over everything
+  scene.add(flashEye);
+
+  function snuff(i) {
+    const f = torchFlames[i];
+    if (f.want === 0) return;
+    f.want = 0;
+    P.hum.blip(90, 0.6);
+    // when every torch in front of you is out, the rest give up too
+    const seen = torchFlames.filter((x) => x.z < CAM.z - 2);
+    if (seen.every((x) => x.want === 0)) {
+      torchFlames.forEach((x) => { x.want = 0; });
+      dark.phase = 'falling';
+      dark.t0 = plate.t;
+    }
+  }
+
+  function updateDark(dt, t) {
+    torchFlames.forEach((f) => {
+      f.lit = P.damp(f.lit, f.want, f.want ? 3 : 1.6, dt);
+      // fades, keeps its shape
+      f.fl.material.opacity = f.lit;
+      f.fl.visible = f.lit > 0.02;
+    });
+
+    // each torch out takes a real share of the light with it
+    const seen = torchFlames.filter((x) => x.z < CAM.z - 2);
+    const outFrac = seen.filter((x) => x.want === 0).length / seen.length;
+    dark.pre = P.damp(dark.pre || 0, dark.phase ? 0.62 : outFrac * 0.62, 1.4, dt);
+    dark.k = dark.pre;
+
+    const u = t - dark.t0;
+    if (dark.phase === 'falling') {
+      dark.k = dark.pre + (1 - dark.pre) * P.smooth(0.6, 5.0, u);
+      dark.face = P.smooth(2.5, 5.5, u);
+      if (u > 8.2) { dark.phase = 'eye'; dark.t0 = t; flashEye.visible = true; }
+    } else if (dark.phase === 'eye') {
+      // it grows out of the dark and strobes
+      const e = Math.min(1, u / 2.4);
+      const vTan = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
+      const D = 6;
+      const fill = 2 * D * vTan * camera.aspect;
+      flashEye.position.copy(camera.position).addScaledVector(camera.getWorldDirection(new THREE.Vector3()), D);
+      flashEye.quaternion.copy(camera.quaternion);
+      const sc = fill * (0.15 + 2.4 * e * e) * (1 + 0.06 * Math.sin(t * 60));
+      flashEye.scale.set(sc, sc, 1);
+      flashMat.uniforms.uFrame.value = Math.floor(t * 24) % 6;
+      flashMat.uniforms.uGain.value = (0.6 + 2.6 * e) * (Math.sin(t * 47) > -0.2 ? 1 : 0.15);
+      flashMat.uniforms.uHue.value = Math.floor(t * 9) % 2;
+      if (Math.floor(u * 7) !== dark.lastStrobe) { dark.lastStrobe = Math.floor(u * 7); if (dark.lastStrobe % 2) plate.invert(0.06); }
+      plate.feedback = 0.15 + 0.3 * e;
+      if (u > 2.6) {
+        // back to how it was, coming up out of blank paper like a fresh visit
+        dark.phase = null; dark.k = 0; dark.pre = 0; dark.face = 0;
+        flashEye.visible = false;
+        plate.feedback = plate.feedbackBase;
+        torchFlames.forEach((f) => { f.want = 1; f.lit = 1; });
+        plate.arrive = 1;
+      }
+    }
+
+    // apply the dark
+    const k = dark.k;
+    hemi.intensity = base.hemi * (1 - k * 0.97);
+    sun.intensity = base.sun * (1 - k);
+    scene.background.copy(DUSK0).lerp(BLACK, k);
+    scene.fog.color.copy(scene.background);
+    faceLight.intensity = dark.face * 38;
+    rimLight.intensity = dark.face * 16;
+    return k;
+  }
 
   function goToMouth() {
     if (plate.leaving) return;
@@ -347,6 +468,7 @@
   const mouthAnchor = new THREE.Vector3(0, -0.2, ALTAR_Z + 3.4);
   let hoverMouth = false;
 
+  window.__dark = { dark };
   plate.run((dt, t) => {
     look.update(dt, t);
     if (!plate.leaving) {
@@ -357,13 +479,14 @@
     }
     P.aim(camera, view.yaw, view.pitch);
 
-    const hm = !plate.leaving && look.hovering() && !!pickMouth(look.pointer);
+    const hm = !plate.leaving && !dark.phase && look.hovering() && !!pickMouth(look.pointer);
+    const ht = !plate.leaving && !dark.phase && look.hovering() && !hm && !!pickTorch(look.pointer);
+    plate.canvas.classList.toggle('over-thing', hm || ht);
     if (hm !== hoverMouth) {
       hoverMouth = hm;
-      plate.canvas.classList.toggle('over-thing', hm);
       P.hum.tone(hm ? 73.4 : 0);
     }
-    if (!plate.leaving) mouthLight.intensity = P.damp(mouthLight.intensity, hm ? 30 : 5 + 3 * Math.sin(t * 2), 6, dt);
+    if (!plate.leaving) mouthLight.intensity = P.damp(mouthLight.intensity, (hm ? 30 : 5 + 3 * Math.sin(t * 2)) * (1 - dark.k), 6, dt);
 
     // the teeth gif holds its first frame, then chatters
     const cyc = t % 1.35;
@@ -374,10 +497,15 @@
     P.animateFlames(scene, t);
 
     fx.gutter = Math.max(0, fx.gutter - dt * 0.7);
+    const dk = updateDark(dt, t);
     candles.forEach((c, i) => {
-      c.intensity = (22 + 9 * P.vnoise(t * 6 + i * 7, 1.3)) * (1 - 0.85 * Math.sin(Math.min(1, fx.gutter) * Math.PI));
+      c.intensity = (22 + 9 * P.vnoise(t * 6 + i * 7, 1.3)) * (1 - 0.85 * Math.sin(Math.min(1, fx.gutter) * Math.PI)) * (1 - dk);
     });
-    torches.forEach((l, i) => { l.intensity = 30 + 10 * P.vnoise(t * 5 + i * 3.3, 7.1); });
+    torches.forEach((l, i) => {
+      const pair = torchFlames.filter((f) => f.light === i);
+      const lit = pair.reduce((a, f) => a + f.lit, 0) / pair.length;
+      l.intensity = (30 + 10 * P.vnoise(t * 5 + i * 3.3, 7.1)) * lit;
+    });
 
     // the face slides a band sideways now and then
     if (fx.slide > 0) {
