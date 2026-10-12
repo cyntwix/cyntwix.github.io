@@ -157,6 +157,13 @@
     relief.castShadow = true;
     relief.receiveShadow = true;
     scene.add(relief);
+    // the same face again on the clean layer at 15%, so the print bites
+    // a little less into it
+    const softMat = new THREE.MeshLambertMaterial({ map: mat.map, color: mat.color, transparent: true, opacity: 0.15, depthWrite: false });
+    softMat.onBeforeCompile = mat.onBeforeCompile;
+    const soft = new THREE.Mesh(geo, softMat);
+    soft.layers.set(1);
+    relief.add(soft);
   }
   const portraitImg = P.image('portrait.png');
   if (portraitImg.complete && portraitImg.naturalWidth) buildRelief();
@@ -237,7 +244,6 @@
       g.strokeStyle = '#2a1a0c';
       g.lineWidth = 2;
       g.strokeRect(5, 5, w - 10, h - 10);
-      P.inscribe(g, L.numeral, w / 2, 34, 28);
       for (let k = 0; k < 9; k++) {
         g.fillStyle = 'rgba(30,16,6,0.6)';
         g.fillRect(12, 62 + k * 9, 40 - rand() * 14, 2);
@@ -254,7 +260,6 @@
     addBox(3.8, 0.5, 2.0, L.x, 0.25, z, stone, { ry });
     return {
       anchor: new THREE.Vector3(L.x, H + 1.4, z),
-      label: document.querySelector(`.pin[data-stele="${i}"]`),
     };
   });
 
@@ -296,9 +301,8 @@
 
   const fx = { turnT: -1, gutter: 0, slide: 0 };
   const plate = P.create({
-    scene, camera, fov: [56, 74],
+    scene, camera, fov: [56, 74], clean: true,
     omens: {
-      texts: ['field note / self-index', 'a place of texture', 'this isnt a biography', 'michigan, boston'],
       extras: [
         (t) => { fx.turnT = t; },
         () => { fx.gutter = 1; },
@@ -340,7 +344,6 @@
     goToMouth();
   }));
 
-  const mouthPin = document.querySelector('.pin[data-mouth]');
   const mouthAnchor = new THREE.Vector3(0, -0.2, ALTAR_Z + 3.4);
   let hoverMouth = false;
 
@@ -358,7 +361,6 @@
     if (hm !== hoverMouth) {
       hoverMouth = hm;
       plate.canvas.classList.toggle('over-thing', hm);
-      mouthPin.classList.toggle('lit', hm);
       P.hum.tone(hm ? 73.4 : 0);
     }
     if (!plate.leaving) mouthLight.intensity = P.damp(mouthLight.intensity, hm ? 30 : 5 + 3 * Math.sin(t * 2), 6, dt);
@@ -395,7 +397,5 @@
     }
     aureole.rotation.z = t * 0.02;
 
-    steles.forEach((s) => P.pin(s.label, s.anchor, camera, { cone: 0.1 }));
-    P.pin(mouthPin, mouthAnchor, camera, { cone: 0.1, anchor: '0%' });
   });
 })();

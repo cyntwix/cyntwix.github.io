@@ -86,7 +86,7 @@ a:active { color: #e14925; }
   pointer-events: none;
   transition: opacity 2.4s;
 }
-.colophon.dim { opacity: 0.22; }
+.colophon.dim { opacity: 0.36; }
 .colophon h1 {
   margin: 0;
   font: bold 34px "Times New Roman", Times, serif;

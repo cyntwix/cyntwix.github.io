@@ -277,7 +277,6 @@
   const plate = P.create({
     scene, camera, fov: [52, 70],
     omens: {
-      texts: ['open wire / open channel', 'the mailbox watches back', 'questions, comments, concerns', 'and curse words'],
       extras: [(t) => { fx.blinkT = t; }, () => { fx.flash = 1; }],
     },
   });
@@ -304,7 +303,6 @@
     P.hum.blip(880, 1.2, 0.08);
   }
 
-  const capPin = document.querySelector('.pin[data-grave]');
   const capAnchor = grave.position.clone().add(new THREE.Vector3(0, -4.9, 0));
   let hoverGrave = false;
 
@@ -317,7 +315,6 @@
     if (hg !== hoverGrave) {
       hoverGrave = hg;
       plate.canvas.classList.toggle('over-thing', hg);
-      capPin.classList.toggle('lit', hg);
     }
 
     // sending: signals reverse and run for the mast, then up and out
@@ -371,6 +368,5 @@
     skyMat.uniforms.uTime.value = t;
     sky.position.copy(camera.position);
 
-    P.pin(capPin, capAnchor, camera, { cone: 0.1, anchor: '0%' });
   });
 })();

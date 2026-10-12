@@ -100,6 +100,10 @@
     const ground = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true }));
     ground.receiveShadow = true;
     scene.add(ground);
+    // the ground again on the clean layer, invisible, so buried words stay buried
+    const groundMask = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ colorWrite: false }));
+    groundMask.layers.set(1);
+    scene.add(groundMask);
   }
 
   // old blank tablets scattered out to the horizon, waiting to be written on
@@ -140,12 +144,40 @@
         g.strokeStyle = '#2a1a0c';
         g.lineWidth = 2;
         g.strokeRect(4, 4, w - 8, h - 8);
+        // a faint ghost of the letters cut into the stone; the readable word
+        // is drawn sharp on top (see letterTexture)
         const size = Math.min(40, Math.floor((w - 20) / (text.length * 0.55)));
-        P.inscribe(g, text, w / 2, h / 2 + 2, size, { color: '#1e1208', shadow: 'rgba(240,210,150,0.55)' });
+        P.inscribe(g, text, w / 2, h / 2 + 2, size, { color: 'rgba(30,18,8,0.55)', shadow: 'rgba(240,210,150,0.2)' });
       }),
       aspect: w / h,
     };
   }
+
+  // the word itself, high resolution, light letters with a dark cut edge
+  function letterTexture(text, aspect) {
+    const w = 1024, h = Math.round(1024 / aspect);
+    const cv = document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    const g = cv.getContext('2d');
+    let size = Math.floor(h * 0.62);
+    const fit = () => { g.font = `bold ${size}px "Times New Roman", Times, serif`; return g.measureText(text).width; };
+    while (fit() > w * 0.86 && size > 10) size -= 2;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.lineJoin = 'round';
+    const y = h / 2 + size * 0.04;
+    g.lineWidth = Math.max(4, size * 0.14);
+    g.strokeStyle = 'rgba(14, 7, 2, 0.95)';
+    g.strokeText(text, w / 2, y);
+    g.fillStyle = '#ffffff';
+    g.fillText(text, w / 2, y);
+    const tex = new THREE.CanvasTexture(cv);
+    tex.anisotropy = 4;
+    return tex;
+  }
+  const LETTER_IDLE = new THREE.Color(0xeedcae);
+  const LETTER_LIT = new THREE.Color(0xfff2b8);
+  const LETTER_HOVER = new THREE.Color(0xffffff);
 
   const H = 2.0;
   function tabletWidth(text) {
@@ -206,8 +238,22 @@
     body.userData.tablet = key;
     pickables.push(body);
 
+    // clean layer: the slab as an invisible mask, then the word, sharp
+    const mask = new THREE.Mesh(body.geometry, new THREE.MeshBasicMaterial({ colorWrite: false }));
+    mask.position.copy(body.position);
+    mask.layers.set(1);
+    group.add(mask);
+    const letters = new THREE.Mesh(
+      new THREE.PlaneGeometry(W * 0.94, H * 0.86),
+      new THREE.MeshBasicMaterial({ map: letterTexture(text, (W * 0.94) / (H * 0.86)), transparent: true, depthWrite: false, color: LETTER_IDLE.clone() })
+    );
+    letters.position.set(0, body.position.y, 0.47);
+    letters.layers.set(1);
+    letters.renderOrder = 2;
+    group.add(letters);
+
     return {
-      key, text, group, body, face, flames, H, baseY,
+      key, text, group, body, face, flames, H, baseY, letters,
       rise: 0, used: 0, wantUsed: false, wantUp: true, delay: slot * 0.18, dead: false,
     };
   }
@@ -322,7 +368,7 @@
   const fx = { flash: 0, fever: 0 };
   let panelW = 0;
   const plate = P.create({
-    scene, camera, fov: [50, 64],
+    scene, camera, fov: [50, 64], clean: true,
     onResize(vw, vh) {
       const panel = document.querySelector('.panel');
       const wide = vw > 820;
@@ -387,6 +433,9 @@
       tb.group.position.y = tb.baseY - (1 - tb.rise) * (tb.H + 1.6) + shake;
       tb.group.rotation.z = Math.sin(t * 0.5 + i) * 0.006 + shake * 0.2;
       tb.face.emissiveIntensity = tb.used * (0.55 + 0.25 * P.vnoise(t * 6 + i, 2)) + (hoverKey === tb.key ? 0.25 : 0);
+      tb.letters.material.color.copy(LETTER_IDLE).lerp(LETTER_LIT, tb.used);
+      if (tb.used > 0.05) tb.letters.material.color.offsetHSL(0, 0, -0.06 * P.vnoise(t * 7 + i, 4));
+      if (hoverKey === tb.key) tb.letters.material.color.lerp(LETTER_HOVER, 0.6);
       tb.flames.forEach((f, k) => {
         const h = tb.used * (complete ? 3.6 : 2.3) * (0.9 + 0.2 * P.vnoise(t * 3 + k, i));
         f.scale.set(1.4, Math.max(0.01, h), 1);

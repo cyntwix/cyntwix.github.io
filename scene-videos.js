@@ -361,11 +361,12 @@
 
   // how much vertical room a given grid needs (floor to arch tips)
   const gridTop = (rows) => BASE_Y + (rows - 1) * SY + TH / 2 + 0.6 + 4.2;
+  const PLAQUE_ROOM = 1.1;   // a little extra room up top; the plaque sits over the arch tips
   function bestCols(aspect) {
     let best = 8, bestScale = 0;
     for (const cols of [3, 4, 5, 6, 8]) {
       const rows = Math.ceil(N / cols);
-      const scale = Math.min(aspect / (cols * SX + 4), 1 / (gridTop(rows) + 0.5));
+      const scale = Math.min(aspect / (cols * SX + 4), 1 / (gridTop(rows) + PLAQUE_ROOM + 0.5));
       if (scale > bestScale) { bestScale = scale; best = cols; }
     }
     return best;
@@ -444,15 +445,23 @@
     const aspect = vw / vh;
     layout(aspect);
     const { W, rows } = layoutInfo;
-    const bottom = 0.6, top = gridTop(rows) + 0.4;
-    const midY = (bottom + top) / 2;
+    const bottom = 0.6, top = gridTop(rows) + PLAQUE_ROOM + 0.4;
+    plaqueAnchor.set(0, gridTop(rows) - 1.2, 1.6);
+    // keep everything below the header bar
+    const header = document.querySelector('.site-header');
+    const hdr = ((header ? header.getBoundingClientRect().height : 44) + 8) / vh;
     const vfov = THREE.MathUtils.degToRad(camera.fov);
-    const needH = (top - bottom) / 2 / Math.tan(vfov / 2);
-    const needW = (W / 2 + 2) / (Math.tan(vfov / 2) * aspect);
+    const tanV = Math.tan(vfov / 2);
+    const needH = (top - bottom) / (2 * tanV * (1 - hdr));
+    const needW = (W / 2 + 2) / (tanV * aspect);
     const d = Math.max(needH, needW) * 1.02;
+    const visH = 2 * d * tanV;
+    // centre the wall in the part of the screen under the header
+    const midY = (bottom + top) / 2 + visH * hdr / 2;
     CAM.set(0, midY, d + 1);
   }
   const CAM = new THREE.Vector3();
+  const plaqueAnchor = new THREE.Vector3();
 
   // ---------------------------------------------------------------- the player
 
@@ -464,7 +473,12 @@
   const listPanel = document.getElementById('frame-list');
   let playing = -1;      // the tapestry that's out (or on its way out)
 
-  function setHover(text) { hoverPanel.textContent = text || 'Hover a frame'; }
+  function setHover(text) {
+    const t = text || 'Videos';
+    hoverPanel.textContent = t;
+    hoverPanel.classList.toggle('long', t.length > 34 && t.length <= 60);
+    hoverPanel.classList.toggle('very-long', t.length > 60);
+  }
 
   // the chosen tapestry comes off the wall and hangs in front of you; the
   // player sits exactly over its picture
@@ -513,12 +527,15 @@
     // under it for the title and the close link
     const vTan = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
     const hTan = vTan * camera.aspect;
-    const D = Math.max(FIELD_W / (2 * 0.52 * hTan), FIELD_H / (2 * 0.5 * vTan));
+    // phones: no caption bar under it, so the picture can take nearly the full width
+    const narrow = innerWidth < 640;
+    const fw = narrow ? 0.96 : 0.52, fh = narrow ? 0.7 : 0.5;
+    const D = Math.max(FIELD_W / (2 * fw * hTan), FIELD_H / (2 * fh * vTan));
     camera.getWorldDirection(_fwd);
     _up.set(0, 1, 0).applyQuaternion(camera.quaternion);
     outQ.copy(camera.quaternion);
     _off.set(0, FIELD_CY, 0).applyQuaternion(outQ);
-    outPos.copy(camera.position).addScaledVector(_fwd, D).addScaledVector(_up, D * vTan * 0.06).sub(_off);
+    outPos.copy(camera.position).addScaledVector(_fwd, D).addScaledVector(_up, D * vTan * (narrow ? 0 : 0.06)).sub(_off);
   }
 
   const corners = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
@@ -577,7 +594,6 @@
     scene, camera, fov: [50, 66], clean: true,
     onResize(vw, vh) { fitCamera(vw, vh); },
     omens: {
-      texts: ['moving images', 'hover a frame', 'return to the core', 'quiet remains', 'once again'],
       extras: [
         () => gust(undefined, 1.8),
         () => { fx.flash = 1; },
@@ -598,12 +614,20 @@
 
   const _pos = new THREE.Vector3();
   let hover = -1;
+  const _pv = new THREE.Vector3();
+  function placePlaque() {
+    _pv.copy(plaqueAnchor).project(camera);
+    const x = (_pv.x * 0.5 + 0.5) * innerWidth, y = (-_pv.y * 0.5 + 0.5) * innerHeight;
+    hoverPanel.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) translate(-50%, -50%)`;
+    hoverPanel.style.opacity = '1';
+  }
   plate.run((dt, t) => {
     look.update(dt, t);
     const anyOpen = tapestries.reduce((m, tp) => Math.max(m, tp.open), 0);
     const calm = 1 - anyOpen;
     camera.position.set(CAM.x + look.x * 2.2 * calm, CAM.y + look.y * 1.0 * calm, CAM.z);
     P.aim(camera, look.yaw * calm, look.pitch * calm);
+    placePlaque();
 
     const hit = playing < 0 && look.hovering() ? pick(look.pointer) : null;
     const hov = hit ? hit.userData.index : -1;

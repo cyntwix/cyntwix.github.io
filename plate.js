@@ -563,6 +563,34 @@
       P.woke();
     });
     document.addEventListener('mouseleave', () => c.aim.set(0, 0));
+
+    // phones: lean with the tilt of the device. The resting angle is whatever
+    // the person is holding it at (it slowly re-centres), so only movement counts.
+    const tilt = { on: false, raw: new THREE.Vector2(), base: null, v: new THREE.Vector2() };
+    function onOrient(e) {
+      if (e.beta == null || e.gamma == null) return;
+      const ang = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
+      let x = e.gamma, y = e.beta;                 // portrait: gamma = left/right, beta = toward/away
+      if (ang === 90) { x = e.beta; y = -e.gamma; }
+      else if (ang === -90 || ang === 270) { x = -e.beta; y = e.gamma; }
+      else if (ang === 180) { x = -e.gamma; y = -e.beta; }
+      tilt.raw.set(x, y);
+      if (!tilt.base) tilt.base = tilt.raw.clone();
+      tilt.on = true;
+    }
+    if (!fine && 'DeviceOrientationEvent' in window) {
+      const DOE = window.DeviceOrientationEvent;
+      if (typeof DOE.requestPermission === 'function') {
+        // iOS asks for permission, and only from a tap
+        const ask = () => {
+          DOE.requestPermission().then((r) => { if (r === 'granted') window.addEventListener('deviceorientation', onOrient); }).catch(() => {});
+          document.removeEventListener('touchend', ask, true);
+        };
+        document.addEventListener('touchend', ask, true);
+      } else {
+        window.addEventListener('deviceorientation', onOrient);
+      }
+    }
     canvas.addEventListener('pointermove', (e) => {
       c.pointer.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
     });
@@ -575,8 +603,18 @@
 
     c.update = function (dt, t) {
       // a soft spring: quick to start, slow to settle, never snaps
-      const tx = fine ? c.aim.x : Math.sin(t * 0.07) * 0.5;
-      const ty = fine ? c.aim.y : Math.sin(t * 0.05) * 0.3;
+      let tx, ty;
+      if (fine) { tx = c.aim.x; ty = c.aim.y; }
+      else if (tilt.on) {
+        tilt.base.lerp(tilt.raw, Math.min(1, dt * 0.25));      // drift back to centre over a few seconds
+        const RANGE = 18;                                       // degrees of tilt for a full lean
+        tilt.v.set((tilt.raw.x - tilt.base.x) / RANGE, -(tilt.raw.y - tilt.base.y) / RANGE);
+        tx = Math.max(-1, Math.min(1, tilt.v.x)) + Math.sin(t * 0.07) * 0.15;
+        ty = Math.max(-1, Math.min(1, tilt.v.y)) + Math.sin(t * 0.05) * 0.1;
+      } else {
+        tx = Math.sin(t * 0.07) * 0.5;
+        ty = Math.sin(t * 0.05) * 0.3;
+      }
       const k = rate * rate, damping = 2 * rate;
       c.vel.x += ((tx - c.cur.x) * k - c.vel.x * damping) * dt;
       c.vel.y += ((ty - c.cur.y) * k - c.vel.y * damping) * dt;
@@ -647,7 +685,7 @@
     const rand = P.mulberry32(Date.now() & 0xffff);
     let next = 7 + rand() * 6;
     let last = '';
-    const texts = o.texts || [];
+    const texts = [];   // no words surfacing any more, only the visual omens
     const extras = o.extras || [];
     return {
       update(t) {
@@ -672,101 +710,6 @@
 
   // ---------------------------------------------------------------- hum
 
-  const HUM_KEY = 'plateHum';
-  function remembered() { try { return sessionStorage.getItem(HUM_KEY) === '1'; } catch { return false; } }
-  function remember(on) { try { sessionStorage.setItem(HUM_KEY, on ? '1' : '0'); } catch { /* fine */ } }
-
-  P.hum = {
-    on: false, nodes: null,
-    build() {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const master = ctx.createGain();
-      master.gain.value = 0;
-      master.connect(ctx.destination);
-      const lp = ctx.createBiquadFilter();
-      lp.type = 'lowpass'; lp.frequency.value = 300; lp.Q.value = 7;
-      lp.connect(master);
-      const root = window.PLATE_HUM_ROOT || 55;
-      [[root, 'sawtooth', 0.2], [root * 1.0075, 'sawtooth', 0.2], [root * 1.4945, 'triangle', 0.14], [root * 0.7473, 'sine', 0.3]].forEach(([f, type, gain]) => {
-        const osc = ctx.createOscillator();
-        osc.type = type; osc.frequency.value = f;
-        const g = ctx.createGain(); g.gain.value = gain;
-        osc.connect(g).connect(lp); osc.start();
-      });
-      const lfo = ctx.createOscillator(); lfo.frequency.value = 0.061;
-      const lg = ctx.createGain(); lg.gain.value = 160;
-      lfo.connect(lg).connect(lp.frequency); lfo.start();
-      const buf = ctx.createBuffer(1, ctx.sampleRate * 3, ctx.sampleRate);
-      const data = buf.getChannelData(0);
-      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-      const noiseSrc = ctx.createBufferSource(); noiseSrc.buffer = buf; noiseSrc.loop = true;
-      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 620; bp.Q.value = 0.7;
-      const ng = ctx.createGain(); ng.gain.value = 0.035;
-      noiseSrc.connect(bp).connect(ng).connect(master); noiseSrc.start();
-      const tone = ctx.createOscillator(); tone.type = 'sine'; tone.frequency.value = 196;
-      const tg = ctx.createGain(); tg.gain.value = 0;
-      tone.connect(tg).connect(master); tone.start();
-      this.nodes = { ctx, master, lp, tone, tg };
-    },
-    set(on) {
-      if (!this.nodes) this.build();
-      const { ctx, master } = this.nodes;
-      ctx.resume();
-      this.on = on;
-      master.gain.setTargetAtTime(on ? 0.5 : 0, ctx.currentTime, 0.6);
-      remember(on);
-      const btn = document.querySelector('.hum');
-      if (btn) {
-        btn.textContent = on ? 'hum: on' : 'hum: off';
-        btn.setAttribute('aria-pressed', String(on));
-      }
-    },
-    tone(freq) {
-      if (!this.on) return;
-      const { ctx, tone, tg } = this.nodes;
-      if (freq) tone.frequency.setTargetAtTime(freq, ctx.currentTime, 0.05);
-      tg.gain.setTargetAtTime(freq ? 0.08 : 0, ctx.currentTime, 0.25);
-    },
-    blip(freq, dur = 0.25, gain = 0.12) {
-      if (!this.on) return;
-      const { ctx, master } = this.nodes;
-      const osc = ctx.createOscillator();
-      osc.type = 'triangle'; osc.frequency.value = freq;
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(gain, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
-      osc.connect(g).connect(master);
-      osc.start(); osc.stop(ctx.currentTime + dur + 0.05);
-    },
-    swell() {
-      if (!this.on) return;
-      const { ctx, lp, master } = this.nodes;
-      lp.frequency.cancelScheduledValues(ctx.currentTime);
-      lp.frequency.setTargetAtTime(2400, ctx.currentTime, 0.6);
-      master.gain.setTargetAtTime(0.9, ctx.currentTime, 0.5);
-    },
-  };
-
-  document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.querySelector('.hum');
-    if (!btn) return;
-    btn.addEventListener('click', () => P.hum.set(!P.hum.on));
-    // browsers won't start sound without a gesture, so a remembered "on"
-    // waits for the first touch on the new page
-    if (remembered()) {
-      btn.textContent = 'hum: waiting';
-      const start = (e) => {
-        if (e.target.closest && e.target.closest('.hum')) {
-          window.removeEventListener('pointerdown', start, true);
-          window.removeEventListener('keydown', start, true);
-          return;
-        }
-        if (!P.hum.on) P.hum.set(true);
-        window.removeEventListener('pointerdown', start, true);
-        window.removeEventListener('keydown', start, true);
-      };
-      window.addEventListener('pointerdown', start, true);
-      window.addEventListener('keydown', start, true);
-    }
-  });
+  // the drone is gone; scenes still call these, so they stay as no-ops
+  P.hum = { on: false, set() {}, tone() {}, blip() {}, swell() {} };
 })();

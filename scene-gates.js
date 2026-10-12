@@ -432,7 +432,6 @@
     },
     onReturn() { travel = null; camera.position.copy(HOME); },
     omens: {
-      texts: ['transient illumination', 'to go beyond', 'videos, images, omens', 'the path through', 'four doors'],
       extras: [(t) => { fx.blinkT = t; }, () => { if (!P.reduceMotion) fx.flash = 1; }],
     },
   });

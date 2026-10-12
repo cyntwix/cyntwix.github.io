@@ -5,24 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Video Archive</title>
     <link rel="icon" href="assets/icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&display=swap">
     <link rel="stylesheet" href="plate.css">
     <style>
-      .colophon { top: 54px; bottom: auto; left: auto; right: 16px; text-align: right; }
-      .colophon h1 { font-size: 26px; }
+      /* a cast plaque over the arches; scene-videos.js pins it in place */
       .hover-panel {
         position: fixed;
-        bottom: 30px; left: 50%;
-        transform: translateX(-50%);
+        left: 0; top: 0;
         z-index: 6;
-        max-width: min(680px, 92vw);
-        padding: 3px 10px;
-        border: 2px ridge #9a762e;
-        background: rgba(12, 7, 1, 0.82);
-        font: 15px "Courier New", Courier, monospace;
-        color: #f4cf68;
+        box-sizing: border-box;
+        width: min(560px, 70vw);
+        min-height: 54px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 34px 9px;
+        border: 2px solid #1a0c03;
+        outline: 2px solid #8a6424;
+        outline-offset: -6px;
+        background:
+          radial-gradient(circle at 14px 50%, #e8c06a 0 2.5px, #3a2008 3.5px, transparent 4.5px),
+          radial-gradient(circle at calc(100% - 14px) 50%, #e8c06a 0 2.5px, #3a2008 3.5px, transparent 4.5px),
+          repeating-linear-gradient(0deg, rgba(255,220,140,0.035) 0 1px, transparent 1px 3px),
+          linear-gradient(180deg, #5a3a12, #2c1806 55%, #3e260c);
+        box-shadow: 0 0 0 2px #b88a3a, 0 0 0 4px #1a0c03, 6px 8px 0 4px rgba(0, 0, 0, 0.55);
+        font-family: "IM Fell English SC", "IM Fell English", "Times New Roman", serif;
+        font-size: 24px;
+        line-height: 1.12;
+        letter-spacing: 0.06em;
+        color: #f2d27a;
         text-align: center;
+        text-shadow: 0 -1px 0 #1a0c03, 0 1px 0 rgba(255, 228, 160, 0.28);
         pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.4s;
       }
+      .hover-panel.long { font-size: 18px; }
+      .hover-panel.very-long { font-size: 15px; letter-spacing: 0.03em; }
       .well-tools {
         position: fixed;
         left: 10px; top: 52px;
@@ -48,7 +69,7 @@
       }
       .hint { left: 50%; transform: translateX(-50%); }
       @media (max-width: 600px) {
-        .hover-panel { bottom: 54px; font-size: 13px; }
+        .hover-panel { font-size: 18px; padding: 6px 26px 7px; }
         .well-tools { top: auto; bottom: 30px; }
         .hint { transform: none; top: 84px; }
       }
@@ -106,6 +127,11 @@
       .player-close:hover { color: #fff1a3; background: #421500; }
       .player-out { font-size: 12px; }
       .hover-panel[hidden] { display: none; }
+      @media (max-width: 639px) {
+        /* on phones the open video gets all the room; tap outside it to close */
+        .player-bar { display: none; }
+        #player { box-shadow: 0 0 0 4px rgba(20, 8, 2, 0.85), 6px 8px 0 4px rgba(0, 0, 0, 0.5); }
+      }
 
       body.no-gl #frame-list { position: static; display: block !important; margin: 100px auto 40px; }
       body.no-gl .hover-panel, body.no-gl .well-tools, body.no-gl .colophon { display: none; }
@@ -125,7 +151,7 @@
 
     <canvas id="plate" aria-label="The end wall of a cathedral hung with tapestries, one for each video. Click a tapestry to play it."></canvas>
 
-    <div class="hover-panel" id="hover-title" aria-live="polite">Hover a frame</div>
+    <div class="hover-panel" id="hover-title" aria-live="polite">Videos</div>
     <div class="well-tools">
       <button type="button" id="list-toggle">index of frames</button>
           </div>
@@ -144,16 +170,8 @@
       </div>
     </div>
 
-    <div class="omen" aria-hidden="true"></div>
+    <h1 class="sr-only">Videos</h1>
 
-    <section class="colophon">
-      <p class="kicker">moving images</p>
-      <h1>Videos</h1>
-    </section>
-
-    <a class="back" href="index.html" data-plate-link>RETURN TO THE CORE</a>
-    <span class="hint">click a tapestry to play it.</span>
-    <button class="hum" type="button" aria-pressed="false">hum: off</button>
 
     <script src="three.js"></script>
     <script src="assets.js"></script>
