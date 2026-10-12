@@ -2,26 +2,30 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Words</title>
-    <link rel="icon" href="icon.png">
-    <link rel="stylesheet" href="pre2010.css">
+    <link rel="icon" href="assets/icon.png">
+    <link rel="stylesheet" href="plate.css">
+    <link rel="stylesheet" href="words.css">
   </head>
-  <body>
-    <header class="writing-header">
+  <body data-mode="words">
+    <header class="site-header" aria-label="Site navigation">
       <a class="sigil" href="index.html" aria-label="Cyntwix home">AS</a>
       <nav>
         <a href="index.html">Home</a>
         <a href="about.html">About</a>
         <a href="videos.html">Videos</a>
-        <a href="writing.html">Words</a>
+        <a href="writing.html" aria-current="page">Words</a>
         <a href="entries.html">Entries</a>
         <a href="contact.html">Contact</a>
       </nav>
     </header>
 
+    <canvas id="plate" aria-hidden="true"></canvas>
+    <div class="omen" aria-hidden="true"></div>
+
     <main>
-      <section class="generator" aria-labelledby="page-title">
+      <section class="panel generator" aria-labelledby="page-title">
         <p class="kicker">writing sketch instrument</p>
         <h1 id="page-title">Submit Your Creation</h1>
         <p class="subtitle">Select an amount</p>
@@ -49,21 +53,19 @@
 
         <p class="word-counter"><span id="word-count">0</span> words</p>
         <button class="submit-button" type="button" disabled>Enter a name to submit</button>
-        <a class="entries-link" href="entries.html">View entries</a>
+        <a class="entries-link" href="entries.html" data-plate-link>View entries</a>
         <p class="status" id="status" role="status"></p>
       </section>
     </main>
 
-    <footer>
-      <span></span>
-      <img src="eye.gif" alt="">
-      <p>WORDS / 2026</p>
-      <img src="eye2.gif" alt="">
-      <span></span>
-    </footer>
+    <button class="hum" type="button" aria-pressed="false">hum: off</button>
 
     <script src="submission-config.js"></script>
     <script src="data/words-data.js"></script>
     <script src="writing-generator.js"></script>
+    <script src="three.js"></script>
+    <script src="assets.js"></script>
+    <script src="plate.js"></script>
+    <script src="scene-words.js"></script>
   </body>
 </html>

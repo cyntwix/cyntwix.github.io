@@ -2,89 +2,58 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>NIGHTMARE!!!</title>
-    <link rel="icon" href="icon.png">
-    <link rel="stylesheet" href="pre2010.css">
+    <link rel="icon" href="assets/icon.png">
+    <link rel="stylesheet" href="plate.css">
+    <style>
+      .fallback-only { max-width: 640px; margin: 90px auto 0; padding: 0 16px; text-align: center; }
+      .fallback-only a { display: block; margin: 12px 0; font-size: 22px; }
+      body.no-gl .colophon { position: static; margin-top: 30px; }
+    </style>
   </head>
-  <body>
-    <div class="page-shell">
-      <header class="site-header" aria-label="Site navigation">
-        <a class="sigil" href="index.html" aria-label="Cyntwix home">AS</a>
-        <nav>
-          <a href="about.html">About</a>
-          <a href="videos.html">Videos</a>
-          <a href="writing.html">Words</a>
-          <a href="contact.html">Contact</a>
-        </nav>
-      </header>
+  <body class="scene-locked">
+    <header class="site-header" aria-label="Site navigation">
+      <a class="sigil" href="index.html" aria-label="Cyntwix home">AS</a>
+      <nav>
+        <a href="about.html">About</a>
+        <a href="videos.html">Videos</a>
+        <a href="writing.html">Words</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </header>
 
-      <main>
-        <section class="hero" aria-labelledby="hero-title">
-          <div class="hero-copy">
-            <p class="kicker">transient illumination</p>
-            <h1 id="hero-title" class="mark-title" aria-label="Cyntwix">
-              <img src="name_title.gif" alt="">
-            </h1>
-            <p class="subhead">videos, images, omens</p>
-            <div class="hero-links" aria-label="Primary pages">
-              <a href="videos.html">proceed to video</a>
-              <a href="contact.html">send a transmission</a>
-            </div>
-          </div>
+    <canvas id="plate" aria-label="A plain of standing stones under a dying sun. Four gates stand around you: About, Videos, Words, Contact."></canvas>
 
-          <aside class="oracle-stage" aria-label="Illuminated site ornament">
-            <span class="halo" aria-hidden="true"></span>
-            <img class="oracle-eye" src="eye.gif" alt="">
-          </aside>
-        </section>
+    <div class="pin" data-gate="0"><span>01</span><strong>About</strong><em>The Who.</em></div>
+    <div class="pin" data-gate="1"><span>02</span><strong>Videos</strong><em>The What.</em></div>
+    <div class="pin" data-gate="2"><span>03</span><strong>Words</strong><em>The Why.</em></div>
+    <div class="pin" data-gate="3"><span>04</span><strong>Contact</strong><em>The How.</em></div>
 
-        <section class="illumination-strip" aria-label="Illumination studies">
-          <div class="torch" aria-hidden="true">
-            <img src="flames.gif" alt="">
-          </div>
-          <p>to go beyond</p>
-          <div class="torch" aria-hidden="true">
-            <img src="flames.gif" alt="">
-          </div>
-        </section>
+    <div class="omen" aria-hidden="true"></div>
 
-        <section class="gates" aria-labelledby="gates-title">
-          <p class="kicker">four doors</p>
-          <h2 id="gates-title">The path through</h2>
-          <div class="gate-grid">
-            <a class="gate" href="about.html">
-              <span>01</span>
-              <strong>About</strong>
-              <em>The Who.</em>
-            </a>
-            <a class="gate" href="videos.html">
-              <span>02</span>
-              <strong>Videos</strong>
-              <em>The What.</em>
-            </a>
-            <a class="gate" href="writing.html">
-              <span>03</span>
-              <strong>Words</strong>
-              <em>The Why.</em>
-            </a>
-            <a class="gate" href="contact.html">
-              <span>04</span>
-              <strong>Contact</strong>
-              <em>The How.</em>
-            </a>
-          </div>
-        </section>
-      </main>
+    <section class="colophon">
+      <p class="kicker">transient illumination</p>
+      <h1 class="sr-only">Cyntwix</h1>
+      <img src="assets/name_title.gif" alt="">
+      <p class="subhead">videos, images, omens</p>
+    </section>
 
-      <footer>
-        <span></span>
-        <img src="eye.gif" alt="">
-        <p>2026</p>
-        <img src="eye2.gif" alt="">
-        <span></span>
-      </footer>
+    <div class="fallback-only">
+      <p class="kicker">four doors</p>
+      <a href="about.html">01 About. The Who.</a>
+      <a href="videos.html">02 Videos. The What.</a>
+      <a href="writing.html">03 Words. The Why.</a>
+      <a href="contact.html">04 Contact. The How.</a>
     </div>
 
+    <span class="hint">choose a door.</span>
+    <button class="hum" type="button" aria-pressed="false">hum: off</button>
+
+    <script src="three.js"></script>
+    <script src="assets.js"></script>
+    <script src="plate.js"></script>
+    <script src="scene-gates.js"></script>
+    <script src="knobs.js"></script>
   </body>
 </html>

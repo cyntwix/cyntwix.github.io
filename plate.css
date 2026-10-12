@@ -1,0 +1,244 @@
+/* shared by every page: the header carried over from pre2010.css, and the
+   bits of furniture that sit on top of the plate */
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: #000;
+  color: #e4d5aa;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.35;
+}
+body.scene-locked { height: 100%; overflow: hidden; overscroll-behavior: none; }
+
+canvas#plate {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  touch-action: none;
+  cursor: default;
+  z-index: 0;
+}
+canvas#plate.over-thing { cursor: pointer; }
+
+a:link, a:visited { color: #e0b643; }
+a:visited { color: #b57b2a; }
+a:hover { color: #fff1a3; background: #421500; }
+a:active { color: #e14925; }
+
+.site-header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 20;
+  padding: 6px 3px 8px;
+  text-align: center;
+  background: rgba(12, 7, 1, 0.84);
+  border-bottom: 4px double #9a762e;
+}
+.sigil {
+  display: inline;
+  margin-right: 25px;
+  padding: 2px 6px;
+  border: 2px ridge #d3a536;
+  color: #f4cf68 !important;
+  background: #321006;
+  font: bold 20px "Times New Roman", Times, serif;
+  text-decoration: none;
+}
+.site-header nav { display: inline; }
+.site-header nav a {
+  margin: 0 7px;
+  font: 15px "Courier New", Courier, monospace;
+}
+.site-header nav a[aria-current="page"] {
+  color: #fff1a3;
+  text-decoration: none;
+  border-bottom: 1px dotted #9a762e;
+}
+@media (max-width: 520px) {
+  .sigil { margin-right: 8px; }
+  .site-header nav a { margin: 0 4px; font-size: 14px; }
+}
+
+.kicker {
+  margin: 0 0 4px;
+  font: italic 15px "Times New Roman", Times, serif;
+  letter-spacing: 0.32em;
+  color: #c9a35a;
+}
+.subhead {
+  margin: 4px 0 0;
+  font: 13px "Courier New", Courier, monospace;
+  color: #b9a774;
+}
+
+.colophon {
+  position: fixed;
+  left: 0; right: 0;
+  bottom: 14px;
+  z-index: 4;
+  text-align: center;
+  pointer-events: none;
+  transition: opacity 2.4s;
+}
+.colophon.dim { opacity: 0.22; }
+.colophon h1 {
+  margin: 0;
+  font: bold 34px "Times New Roman", Times, serif;
+  letter-spacing: 0.3em;
+  color: #e0b643;
+  text-shadow: 0 0 3px #000, 2px 2px 0 #120806;
+}
+.colophon img {
+  display: block;
+  width: min(760px, 92vw);
+  margin: 0 auto;
+  image-rendering: pixelated;
+  mix-blend-mode: screen;
+}
+body.leaving .colophon,
+body.leaving .pin,
+body.leaving .hint { opacity: 0 !important; transition: opacity 0.5s; }
+
+/* labels pinned to things in the world */
+.pin {
+  position: fixed;
+  z-index: 3;
+  left: 0; top: 0;
+  text-align: center;
+  pointer-events: none;
+  white-space: nowrap;
+  opacity: 0;
+  text-shadow: 0 0 2px #000, 1px 1px 0 #000, -1px -1px 0 #000;
+}
+.pin span {
+  display: block;
+  font: 12px "Courier New", Courier, monospace;
+  color: #b57b2a;
+}
+.pin strong {
+  display: block;
+  font: bold 22px "Times New Roman", Times, serif;
+  letter-spacing: 0.12em;
+  color: #e0b643;
+}
+.pin em {
+  display: block;
+  font: italic 15px "Times New Roman", Times, serif;
+  color: #e4d5aa;
+}
+.pin a { pointer-events: auto; font: 15px "Courier New", Courier, monospace; }
+.pin.lit strong { color: #fff1a3; background: #421500; padding: 0 6px; }
+
+.omen {
+  position: fixed;
+  z-index: 4;
+  left: 50%;
+  top: 38%;
+  transform: translate(-50%, -50%);
+  font: italic 30px "Times New Roman", Times, serif;
+  letter-spacing: 0.5em;
+  color: #ead9a8;
+  pointer-events: none;
+  opacity: 0;
+  white-space: nowrap;
+  text-shadow: 0 0 3px #000, 2px 2px 0 #120806;
+  transition: opacity 1.2s;
+}
+.omen.show { opacity: 0.85; }
+@media (max-width: 600px) { .omen { font-size: 20px; letter-spacing: 0.3em; } }
+
+.hum {
+  position: fixed;
+  right: 10px;
+  bottom: 8px;
+  z-index: 21;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #b57b2a;
+  font: 12px "Courier New", Courier, monospace;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.hum:hover { color: #fff1a3; background: #421500; }
+.hint {
+  position: fixed;
+  left: 10px;
+  bottom: 8px;
+  z-index: 6;
+  font: 12px "Courier New", Courier, monospace;
+  color: #8a6a35;
+  transition: opacity 2s;
+  pointer-events: none;
+}
+@media (max-width: 600px) {
+  .hint {
+    bottom: auto; top: 52px; left: 0; right: 0;
+    text-align: center;
+    color: #c9a35a;
+    text-shadow: 0 0 2px #000, 1px 1px 0 #000, -1px -1px 0 #000;
+  }
+}
+
+/* parchment panels for pages that carry real UI */
+.panel {
+  position: relative;
+  z-index: 5;
+  box-sizing: border-box;
+  padding: 14px 16px 16px;
+  border: 4px double #9a762e;
+  background: rgba(12, 7, 1, 0.86);
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.55);
+}
+.panel h1, .panel h2 { margin: 0; color: #f4cf68; font-weight: bold; }
+.panel h1 { font-size: 30px; letter-spacing: 0.08em; }
+.panel h2 { font-size: 18px; }
+.panel button,
+.panel input,
+.panel textarea {
+  font: 15px "Courier New", Courier, monospace;
+  color: #e4d5aa;
+  background: #1a0f06;
+  border: 2px inset #6a4a1c;
+  border-radius: 0;
+}
+.panel button {
+  padding: 3px 10px;
+  border-style: outset;
+  background: #321006;
+  color: #f4cf68;
+  cursor: pointer;
+}
+.panel button:hover:not(:disabled) { background: #421500; color: #fff1a3; }
+.panel button:active:not(:disabled) { border-style: inset; }
+.panel button:disabled { color: #7a6440; cursor: default; }
+.panel :focus-visible,
+.site-header a:focus-visible,
+.hum:focus-visible { outline: 2px dotted #fff1a3; outline-offset: 2px; }
+
+.fallback-only { display: none; }
+body.no-gl canvas#plate,
+body.no-gl .hum,
+body.no-gl .hint,
+body.no-gl .pin { display: none !important; }
+body.no-gl { background: #0c0701; }
+body.no-gl .fallback-only { display: block; }
+body.no-gl.scene-locked { height: auto; overflow: auto; }
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .colophon, .hint, .omen { transition: none; }
+}

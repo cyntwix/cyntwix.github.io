@@ -2,53 +2,54 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Entries</title>
-    <link rel="icon" href="icon.png">
-    <link rel="stylesheet" href="pre2010.css">
+    <link rel="icon" href="assets/icon.png">
+    <link rel="stylesheet" href="plate.css">
+    <link rel="stylesheet" href="words.css">
   </head>
-  <body>
-    <header class="writing-header">
+  <body data-mode="entries">
+    <header class="site-header" aria-label="Site navigation">
       <a class="sigil" href="index.html" aria-label="Cyntwix home">AS</a>
       <nav>
         <a href="index.html">Home</a>
         <a href="about.html">About</a>
         <a href="videos.html">Videos</a>
         <a href="writing.html">Words</a>
-        <a href="entries.html">Entries</a>
+        <a href="entries.html" aria-current="page">Entries</a>
         <a href="contact.html">Contact</a>
       </nav>
     </header>
 
+    <canvas id="plate" aria-hidden="true"></canvas>
+    <div class="omen" aria-hidden="true"></div>
+
     <main class="entries-main">
-      <section class="entries-hero" aria-labelledby="page-title">
+      <section class="panel entries-panel" aria-labelledby="page-title">
         <p class="kicker">stored sketches</p>
         <h1 id="page-title">Entries</h1>
         <p class="entries-subtitle">A small ledger of sketches made for users, by users.</p>
-        <a class="new-entry-link" href="writing.html">Make another</a>
-      </section>
+        <a class="new-entry-link" href="writing.html" data-plate-link>Make another</a>
 
-      <section class="entry-shell" aria-label="Submitted writing entries">
-        <div class="entry-list-panel">
-          <h2>Submissions</h2>
-          <div class="entry-list" id="entry-list"></div>
+        <div class="entry-shell" aria-label="Submitted writing entries">
+          <div class="entry-list-panel">
+            <h2>Submissions</h2>
+            <div class="entry-list" id="entry-list"></div>
+          </div>
+          <article class="entry-detail" id="entry-detail" aria-live="polite">
+            <p class="empty-state">One sec, loading entries...</p>
+          </article>
         </div>
-
-        <article class="entry-detail" id="entry-detail" aria-live="polite">
-          <p class="empty-state">One sec, loading entries...</p>
-        </article>
       </section>
     </main>
 
-    <footer>
-      <span></span>
-      <img src="eye.gif" alt="">
-      <p>ENTRIES / 2026</p>
-      <img src="eye2.gif" alt="">
-      <span></span>
-    </footer>
+    <button class="hum" type="button" aria-pressed="false">hum: off</button>
 
     <script src="submission-config.js"></script>
     <script src="entries.js"></script>
+    <script src="three.js"></script>
+    <script src="assets.js"></script>
+    <script src="plate.js"></script>
+    <script src="scene-words.js"></script>
   </body>
 </html>

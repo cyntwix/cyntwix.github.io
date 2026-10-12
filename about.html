@@ -2,70 +2,69 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>About</title>
-    <link rel="icon" href="icon.png">
-    <link rel="stylesheet" href="pre2010.css">
+    <link rel="icon" href="assets/icon.png">
+    <link rel="stylesheet" href="plate.css">
+    <style>
+      .colophon { top: 54px; bottom: auto; left: 16px; right: auto; text-align: left; }
+      .colophon h1 { font-size: 28px; }
+      .colophon img { width: min(300px, 50vw); margin: 4px 0 0; }
+      .pin[data-stele] strong { font-size: 18px; }
+      .pin[data-stele] span:not(:first-child) { margin-top: 8px; }
+      .pin[data-stele] em { font-style: normal; font-size: 14px; }
+      .pin[data-mouth] em { color: #ead9a8; }
+      .fallback-only { max-width: 640px; margin: 80px auto 40px; padding: 0 16px; text-align: center; }
+      .fallback-only img { max-width: 260px; border: 4px double #9a762e; }
+      .fallback-only dl { text-align: left; display: inline-block; }
+      .fallback-only dt { color: #f4cf68; font-weight: bold; margin-top: 10px; }
+      .fallback-only dd { margin: 0; }
+      body.no-gl .colophon { position: static; margin-top: 70px; }
+    </style>
   </head>
-  <body>
-    <header class="about-header">
+  <body class="scene-locked">
+    <header class="site-header" aria-label="Site navigation">
       <a class="sigil" href="index.html" aria-label="Cyntwix home">AS</a>
       <nav>
         <a href="index.html">Home</a>
-        <a href="about.html">About</a>
+        <a href="about.html" aria-current="page">About</a>
         <a href="videos.html">Videos</a>
         <a href="writing.html">Words</a>
         <a href="contact.html">Contact</a>
       </nav>
     </header>
 
-    <main>
-      <section class="about-hero" aria-labelledby="about-title">
-        <div class="copy">
-          <p class="kicker">field note / self-index</p>
-          <h1 id="about-title">About</h1>
-          <p class="subhead">A place of texture</p>
-          <div class="identity-mark" aria-label="Image mark">
-            <img src="name_title.gif" alt="">
-          </div>
-        </div>
+    <canvas id="plate" aria-label="A long stone nave. At the far end a glitched portrait is carved in relief, haloed and lit by candles. Three steles stand along the way."></canvas>
 
-        <figure class="portrait-relic">
-          <img src="newface.png" alt="Glitched portrait">
-        </figure>
-      </section>
+    <div class="pin" data-stele="0"><span>01</span><strong>Source</strong><em>Michigan, Boston.</em><span>02</span><strong>Construction</strong><em>Video, photography.</em></div>
+    <div class="pin" data-stele="1"><span>03</span><strong>Signal</strong><em>Best reached by email.</em></div>
+    <div class="pin" data-mouth><em>This isnt a biography.</em><a href="contact.html" data-mouth-link>telepathize</a></div>
 
-      <section class="ledger" aria-label="About notes">
-        <article>
-          <span>01</span>
-          <h2>Source</h2>
-          <p>Michigan, Boston.</p>
-        </article>
-        <article>
-          <span>02</span>
-          <h2>Construction</h2>
-          <p>Video, photography.</p>
-        </article>
-        <article>
-          <span>03</span>
-          <h2>Signal</h2>
-          <p>Best reached by email.</p>
-        </article>
-      </section>
+    <div class="omen" aria-hidden="true"></div>
 
-      <section class="marginalia" aria-label="Marginalia">
-        <img src="champ.gif" alt="">
-        <p>This isnt a biography.</p>
-        <a href="contact.html">telepathize</a>
-      </section>
-    </main>
+    <section class="colophon">
+      <p class="kicker">field note / self-index</p>
+      <h1>About</h1>
+      <p class="subhead">A place of texture</p>
+      <img src="assets/name_title.gif" alt="">
+    </section>
 
-    <footer>
-      <span></span>
-      <img src="eye.gif" alt="">
-      <p>ABOUT / 2026</p>
-      <img src="eye2.gif" alt="">
-      <span></span>
-    </footer>
+    <div class="fallback-only">
+      <img src="assets/newface-small.jpg" alt="Glitched portrait">
+      <dl>
+        <dt>01 Source</dt><dd>Michigan, Boston.</dd>
+        <dt>02 Construction</dt><dd>Video, photography.</dd>
+        <dt>03 Signal</dt><dd>Best reached by email.</dd>
+      </dl>
+      <p>This isnt a biography. <a href="contact.html">telepathize</a></p>
+    </div>
+
+    <span class="hint">the mouth leads out.</span>
+    <button class="hum" type="button" aria-pressed="false">hum: off</button>
+
+    <script src="three.js"></script>
+    <script src="assets.js"></script>
+    <script src="plate.js"></script>
+    <script src="scene-about.js"></script>
   </body>
 </html>
