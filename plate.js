@@ -678,6 +678,98 @@
     return op;
   };
 
+  // ---------------------------------------------------------------- birds
+
+  // Dark wing-shapes crossing the sky: sometimes one, close and slow; sometimes
+  // a flock, further off, loose or in a V. Each bird is two triangles that flap.
+  P.birds = function (scene, camera, o = {}) {
+    const MAX = 40;
+    const pos = new Float32Array(MAX * 12 * 3);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setDrawRange(0, 0);
+    const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: o.color ?? 0x120a06, side: THREE.DoubleSide, fog: false }));
+    mesh.frustumCulled = false;
+    scene.add(mesh);
+    const up = new THREE.Vector3(0, 1, 0);
+    let flight = null;
+    const v = { f: new THREE.Vector3(), r: new THREE.Vector3(), p: new THREE.Vector3(), h: new THREE.Vector3(), s: new THREE.Vector3(), a: new THREE.Vector3(), b: new THREE.Vector3(), l: new THREE.Vector3(), rt: new THREE.Vector3() };
+
+    function launch(kind) {
+      if (flight || P.reduceMotion) return;
+      kind = kind || (Math.random() < 0.35 ? 'one' : Math.random() < 0.5 ? 'v' : 'loose');
+      camera.getWorldDirection(v.f); v.f.y = 0; v.f.normalize();
+      v.r.crossVectors(v.f, up).normalize();
+      const one = kind === 'one';
+      const dist = one ? 30 + Math.random() * 20 : 70 + Math.random() * 60;
+      const tanH = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) * camera.aspect;
+      const dir = Math.random() < 0.5 ? 1 : -1;
+      // a point on the flight: depth d, a fraction of the view's width across, and an angle above the horizon
+      const at = (d, across, elev) => {
+        const p = camera.position.clone().addScaledVector(v.f, d).addScaledVector(v.r, across * d * tanH);
+        p.y = camera.position.y + Math.tan(elev) * d;
+        return p;
+      };
+      const e0 = (o.minElev ?? 0.24) + Math.random() * (o.elevRange ?? 0.26);
+      // they fly through depth: in close from one side and away to the horizon, or the reverse
+      const away = Math.random() < 0.5;
+      const near = dist * (0.35 + Math.random() * 0.2), far = dist * (1.7 + Math.random() * 0.9);
+      const nearPt = at(near, dir * -1.25, e0 + 0.08);
+      const farPt = at(far, dir * (0.15 + Math.random() * 0.45), Math.max(0.17, e0 * 0.85));
+      const start = away ? nearPt : farPt;
+      const end = away ? farPt : nearPt;
+      if (!away) { start.copy(at(far, -dir * (0.15 + Math.random() * 0.45), Math.max(0.17, e0 * 0.85))); end.copy(at(near, dir * 1.25, e0 + 0.08)); }
+      const n = one ? 1 : kind === 'v' ? 9 + Math.floor(Math.random() * 8) : 14 + Math.floor(Math.random() * 22);
+      const size = (one ? 2.4 : 1.9) * (o.size ?? 1);
+      const birds = [];
+      for (let i = 0; i < n; i++) {
+        let back = 0, side = 0, lift = 0;
+        if (kind === 'v') { const k = Math.ceil(i / 2), sgn = i % 2 ? 1 : -1; back = k * 2.6; side = sgn * k * 2.2; lift = (Math.random() - 0.5) * 0.6; }
+        else if (!one) { back = Math.random() * 22; side = (Math.random() - 0.5) * 20; lift = (Math.random() - 0.5) * 9; }
+        birds.push({ back, side, lift, phase: Math.random() * 6.28, rate: 7 + Math.random() * 3, wob: Math.random() * 6.28, glide: Math.random() });
+      }
+      const head = end.clone().sub(start); head.y = 0; head.normalize();
+      const wing = new THREE.Vector3().crossVectors(head, up).normalize();
+      if (wing.dot(v.r) < 0) wing.negate();
+      const across = v.r.clone().lerp(wing, 0.55).normalize();
+      flight = { start, end, birds, t: 0, dur: (one ? 8 : 13) + Math.random() * 4, size, across };
+    }
+
+    function update(dt, t) {
+      if (!flight) return;
+      const F = flight;
+      F.t += dt / F.dur;
+      if (F.t >= 1.15) { flight = null; geo.setDrawRange(0, 0); return; }
+      v.h.subVectors(F.end, F.start).normalize();
+      v.s.crossVectors(v.h, up).normalize();
+      let k = 0;
+      F.birds.forEach((b, i) => {
+        v.p.lerpVectors(F.start, F.end, F.t);
+        // stragglers trail behind; everyone drifts a little
+        v.p.addScaledVector(v.h, -b.back).addScaledVector(v.s, b.side);
+        v.p.y += b.lift + Math.sin(t * 0.9 + b.wob) * 0.7;
+        // flap, with the odd glide
+        const gliding = Math.sin(t * 0.6 + b.glide * 6) > 0.55;
+        const flap = gliding ? 0.15 : Math.sin(t * b.rate + b.phase);
+        // drawn the way they're always drawn: an M, wings spread across the view
+        const S = F.size, ax = F.across;
+        const put = (q) => { pos[k++] = q.x; pos[k++] = q.y; pos[k++] = q.z; };
+        const pt = (dx, dy) => v.a.copy(v.p).addScaledVector(ax, dx * S).setY(v.p.y + dy * S);
+        const top = pt(0, 0.12).clone(), bot = pt(0, -0.22).clone();
+        for (const sg of [-1, 1]) {
+          const elbow = pt(sg * 1.0, 0.32 + flap * 0.55).clone();
+          const elbowLo = elbow.clone(); elbowLo.y -= 0.16 * S;
+          const tip = pt(sg * 2.1, -0.05 + flap * 0.95).clone();
+          put(top); put(elbow); put(bot);
+          put(elbow); put(tip); put(elbowLo);
+        }
+      });
+      geo.attributes.position.needsUpdate = true;
+      geo.setDrawRange(0, F.birds.length * 12);
+    }
+    return { launch, update, get flying() { return !!flight; }, seek(k) { if (flight) flight.t = k; } };
+  };
+
   // ---------------------------------------------------------------- omens
 
   P.omens = function (plate, o) {

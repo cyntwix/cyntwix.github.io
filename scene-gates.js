@@ -7,10 +7,10 @@
   const rand = P.mulberry32(1757);
 
   const GATES = [
-    { href: 'about.html', numeral: 'I', tone: 98.0 },
-    { href: 'videos.html', numeral: 'II', tone: 116.5 },
-    { href: 'writing.html', numeral: 'III', tone: 130.8 },
-    { href: 'contact.html', numeral: 'IV', tone: 146.8 },
+    { href: 'about.html', numeral: 'I', name: 'ABOUT', tone: 98.0 },
+    { href: 'videos.html', numeral: 'II', name: 'VIDEOS', tone: 116.5 },
+    { href: 'writing.html', numeral: 'III', name: 'WORDS', tone: 130.8 },
+    { href: 'contact.html', numeral: 'IV', name: 'CONTACT', tone: 146.8 },
   ];
 
   function groundHeight(x, z) {
@@ -173,6 +173,21 @@
   eye.renderOrder = -9;
   scene.add(eye);
 
+  // ---- one sight on the plain, chosen per visit (?sight=cathedral|frigate|sword to force one)
+  let sightTick = null;
+  const SIGHTS = ['cathedral', 'frigate', 'sword'];
+  const forced = new URLSearchParams(location.search).get('sight');
+  const SIGHT = SIGHTS.includes(forced) ? forced : SIGHTS[Math.floor(Math.random() * SIGHTS.length)];
+  const tall = innerWidth < innerHeight;
+  // off to the right of the sun, big enough to stand over the gates
+  const SIGHT_AT = {
+    cathedral: { az: tall ? 0.36 : 0.62, dist: 175, clear: 80, scale: 1.15 },
+    frigate:   { az: tall ? 0.34 : 0.62, dist: 175, clear: 90, scale: 1.3 },
+    sword:     { az: tall ? 0.3 : 0.56, dist: 140, clear: 30, scale: 1.3 },
+  }[SIGHT];
+  const sightPos = new THREE.Vector3(Math.sin(SIGHT_AT.az) * SIGHT_AT.dist, 0, -Math.cos(SIGHT_AT.az) * SIGHT_AT.dist);
+  sightPos.y = groundHeight(sightPos.x, sightPos.z);
+
   // ---- ground
   {
     const geo = new THREE.PlaneGeometry(3200, 3200, 220, 220);
@@ -209,6 +224,7 @@
       const a = rand() * Math.PI * 2;
       const x = Math.sin(a) * r, z = -Math.cos(a) * r;
       if (Math.hypot(x - stairBase.x, z - stairBase.z) < 34) continue;
+      if (Math.hypot(x - sightPos.x, z - sightPos.z) < SIGHT_AT.clear) continue;
       // keep the ground between you and the gates clear
       const ahead = Math.abs(Math.atan2(x, -z));
       if (ahead < 0.95 && r < CLEAR_R) continue;
@@ -259,6 +275,171 @@
     }
     for (const o of [column, steps, posts]) { o.castShadow = true; o.receiveShadow = true; }
     scene.add(steps, posts);
+  }
+
+  // ---- the sight itself
+  {
+    const srand = P.mulberry32(SIGHT.length * 977 + 3);
+    const root = new THREE.Group();
+    root.position.copy(sightPos);
+    // face roughly back toward the gates
+    root.rotation.y = Math.atan2(-sightPos.x, -sightPos.z);
+    root.scale.setScalar(SIGHT_AT.scale);
+    scene.add(root);
+    const lam = (c) => new THREE.MeshLambertMaterial({ color: c, flatShading: true });
+    const add = (geo, mat, x, y, z, rx = 0, ry = 0, rz = 0, parent = root) => {
+      const m = new THREE.Mesh(geo, mat);
+      m.position.set(x, y, z);
+      m.rotation.set(rx, ry, rz);
+      m.castShadow = m.receiveShadow = true;
+      parent.add(m);
+      return m;
+    };
+    const B = (w, h, d) => new THREE.BoxGeometry(w, h, d);
+    // rubble heaped around whatever stands here
+    const rubble = (n, r, mat, h = 2.5) => {
+      for (let i = 0; i < n; i++) {
+        const a = srand() * Math.PI * 2, d = r * (0.4 + srand() * 0.8);
+        const s = 0.8 + srand() * h;
+        add(B(s * (1 + srand()), s * 0.7, s), mat, Math.cos(a) * d, s * 0.25, Math.sin(a) * d, srand(), srand() * 3, srand());
+      }
+    };
+
+    if (SIGHT === 'cathedral') {
+      const st = lam(0x8e7a62), dk = lam(0x5a4a3c);
+      const L = 64, Wd = 22, H = 30;
+      // nave walls: piers with tall lancet gaps, some bays fallen
+      for (const side of [-1, 1]) {
+        for (let i = 0; i <= 8; i++) {
+          const z = -L / 2 + i * (L / 8);
+          const broken = srand() < 0.3;
+          const h = broken ? H * (0.3 + srand() * 0.4) : H;
+          add(B(2.6, h, 3.2), st, side * Wd / 2, h / 2, z);
+          // flying buttress, leaning in from outside
+          if (!broken && i % 2 === 0) {
+            add(B(1.6, 20, 1.6), st, side * (Wd / 2 + 8), 10, z);
+            add(B(1.1, 13, 1.1), st, side * (Wd / 2 + 4), H - 7, z, 0, 0, side * 0.75);
+          }
+          // the wall between piers, low, with the window gap above
+          if (i < 8) add(B(1.4, H * 0.32, L / 8 - 2.6), dk, side * Wd / 2, H * 0.16, z + L / 16);
+        }
+        // a stretch of wall still carrying its upper course
+        add(B(1.4, 4, L * 0.45), dk, side * Wd / 2, H - 2, -L / 4 + side * 6);
+      }
+      // the roof is gone; a few ribs still arch across
+      for (let i = 1; i < 8; i += 2) {
+        if (srand() < 0.35) continue;
+        const z = -L / 2 + i * (L / 8);
+        for (let k = 0; k <= 8; k++) {
+          const a = Math.PI * (k / 8);
+          if (srand() < 0.15) continue;
+          add(B(1.2, 1.2, 1.2), st, Math.cos(a) * Wd / 2, H + Math.sin(a) * 9, z, 0, 0, a);
+        }
+      }
+      // west front: two towers, one snapped off; the rose is an empty ring
+      const fz = L / 2 + 2;
+      add(B(6, H + 8, 3), st, -(Wd - 2) / 2 + 3, (H + 8) / 2, fz);
+      add(B(6, H + 8, 3), st, (Wd - 2) / 2 - 3, (H + 8) / 2, fz);
+      add(B(Wd - 2, 12, 3), st, 0, 6, fz);                                    // the base, around the door
+      add(B(8.4, 2, 3), st, -3.4, H + 2, fz, 0, 0, 0.55);                      // pointed head of the great window
+      add(B(8.4, 2, 3), st, 3.4, H + 2, fz, 0, 0, -0.55);
+      for (let k = 0; k < 3; k++) if (k !== 1) add(B(0.7, H - 13, 0.8), dk, -3 + k * 3, 12 + (H - 13) / 2, fz);   // mullions, one gone
+      add(new THREE.TorusGeometry(5.4, 0.9, 6, 20), dk, 0, H - 9, fz + 0.2);
+      add(B(5, 10, 3.4), lam(0x140c08), 0, 5, fz + 0.4);                 // the doorway, dark
+      add(B(9, 64, 9), st, -Wd / 2 - 3, 32, fz);
+      add(new THREE.ConeGeometry(6.2, 22, 4), dk, -Wd / 2 - 3, 75, fz, 0, Math.PI / 4, 0);
+      add(B(9, 38, 9), st, Wd / 2 + 3, 19, fz);
+      add(B(9, 6, 9), st, Wd / 2 + 3, 40, fz, 0.2, 0.3, 0.4);            // the snapped top, slumping
+      add(new THREE.ConeGeometry(6.2, 22, 4), dk, Wd / 2 + 16, 4, fz + 10, 1.35, 0.4, 0.2);   // its spire, fallen
+      // the apse at the far end, half standing
+      for (let k = 0; k < 7; k++) {
+        const a = Math.PI * (k / 6);
+        if (k === 4) continue;
+        add(B(2.6, H * (0.5 + 0.5 * srand()), 2.6), st, Math.cos(a) * Wd / 2, H * 0.35, -L / 2 - Math.sin(a) * 10);
+      }
+      rubble(70, 40, st, 3);
+    }
+
+    if (SIGHT === 'frigate') {
+      const hull = lam(0x6e6a64), dark = lam(0x2e2a28), rust = lam(0x7a4a30);
+      const ship = new THREE.Group();
+      // nose ploughed in, tail up
+      ship.position.set(0, 20, 0);
+      ship.rotation.order = 'YXZ';
+      ship.rotation.set(0.62, 1.15, 0.25);   // side-on, nose driven into the ground, stern up in the air
+      root.add(ship);
+      const len = 96;
+      // the hull: a long faceted body, plated in sections
+      for (let i = 0; i < 9; i++) {
+        const z = -len / 2 + i * (len / 9) + len / 18;
+        const r = 7.5 - Math.abs(i - 5) * 0.7;
+        if (i === 3) continue;                                  // a section blown out...
+        const seg = add(new THREE.CylinderGeometry(r, r * 0.97, len / 9 - 0.6, 6, 1), i % 2 ? hull : rust, 0, 0, z, Math.PI / 2, 0, 0, ship);
+        seg.rotation.z = Math.PI / 6;
+      }
+      // ...leaving its ribs open to the sky
+      for (let k = 0; k < 5; k++) {
+        const z = -len / 2 + 3 * (len / 9) + 1.5 + k * 2.1;
+        add(new THREE.TorusGeometry(6.2, 0.35, 4, 12, Math.PI * (1.1 + srand() * 0.6)), dark, 0, 0, z, 0, 0, srand() * 2, ship);
+      }
+      add(B(2, 2, len / 9), dark, 0, -5.8, -len / 2 + 3.5 * (len / 9), 0, 0, 0, ship);      // the keel holds
+      // the prow, a long wedge, buried
+      add(new THREE.ConeGeometry(6.4, 22, 6), hull, 0, 0, len / 2 + 10, Math.PI / 2, 0, 0, ship);
+      // bridge tower and masts
+      add(B(6, 9, 12), hull, 0, 10, -8, 0, 0, 0, ship);
+      add(B(7, 2, 5), dark, 0, 15.5, -5, 0, 0, 0, ship);
+      add(B(0.5, 22, 0.5), dark, 1.5, 22, -12, 0.2, 0, 0.1, ship);
+      add(B(0.4, 14, 0.4), dark, -2, 19, -16, -0.3, 0, -0.2, ship);
+      // fins, one torn away
+      add(B(1, 12, 18), hull, 9, 2, -34, 0, 0, -0.5, ship);
+      add(B(1, 7, 14), hull, -8, 0, -36, 0, 0, 1.0, ship);
+      // engine bells at the stern
+      for (const [x, y] of [[-3.4, 2.4], [3.4, 2.4], [0, -3]]) {
+        add(new THREE.CylinderGeometry(2.2, 3.6, 7, 8, 1, true), dark, x, y, -len / 2 - 3, Math.PI / 2, 0, 0, ship);
+      }
+      // a gouge in the earth behind it, plates shed along the way
+      for (let i = 0; i < 26; i++) {
+        const t = i / 26;
+        add(B(2 + srand() * 4, 0.4, 1.5 + srand() * 3), srand() < 0.5 ? hull : rust, (srand() - 0.5) * 18, 0.3, 30 + t * 70, srand() * 0.4, srand() * 3, srand() * 0.4);
+      }
+      rubble(40, 26, lam(0x5a4a3a), 2);
+      // a light still blinking somewhere on it
+      const beacon = new THREE.PointLight(0xff3020, 0, 40, 1.4);
+      beacon.position.set(1.5, 33, -12);
+      ship.add(beacon);
+      sightTick = (t) => { beacon.intensity = Math.sin(t * 3.1) > 0.85 ? 60 : 0; };
+    }
+
+    if (SIGHT === 'sword') {
+      const steel = lam(0x8a8c90), gilt = lam(0xb08a3a), grip = lam(0x3a2418);
+      const sw = new THREE.Group();
+      // driven in at a lean, most of the blade still showing
+      sw.rotation.set(0.1, 0.12, -0.16);
+      root.add(sw);
+      const bladeL = 64;
+      // a diamond-section blade, tapering, with a fuller down its middle
+      const blade = new THREE.CylinderGeometry(3.4, 1.4, bladeL, 4, 1);
+      blade.scale(1, 1, 0.28);
+      add(blade, steel, 0, bladeL / 2 - 14, 0, 0, Math.PI / 4, 0, sw);
+      add(B(0.5, bladeL * 0.75, 0.6), lam(0x5a5c62), 0, bladeL / 2 - 10, 0, 0, 0, 0, sw);
+      // notches knocked out of the edges
+      for (let i = 0; i < 4; i++) add(B(1.2, 1.4, 1.2), lam(0x2a2620), (i % 2 ? 1 : -1) * 2.2, 8 + i * 9, 0, 0, 0, 0.7, sw);
+      const top = bladeL - 14;
+      add(B(19, 2.2, 2.6), gilt, 0, top + 1, 0, 0, 0, 0, sw);                       // crossguard
+      add(new THREE.ConeGeometry(1.5, 4, 4), gilt, -10.5, top + 1, 0, 0, 0, Math.PI / 2, sw);
+      add(new THREE.ConeGeometry(1.5, 4, 4), gilt, 10.5, top + 1, 0, 0, 0, -Math.PI / 2, sw);
+      add(new THREE.CylinderGeometry(1, 1.15, 13, 6), grip, 0, top + 8.5, 0, 0, 0, 0, sw);
+      for (let i = 0; i < 5; i++) add(new THREE.TorusGeometry(1.15, 0.25, 4, 8), gilt, 0, top + 3.5 + i * 2.5, 0, Math.PI / 2, 0, 0, sw);
+      add(new THREE.IcosahedronGeometry(2.6, 0), gilt, 0, top + 17, 0, 0, 0, 0, sw);  // pommel
+      // a rag of cloth still tied below the guard
+      add(B(0.3, 9, 4), lam(0x6a1810), 1.8, top - 5, 0.6, 0, 0.3, 0.25, sw);
+      // the earth split open where it landed
+      for (let i = 0; i < 9; i++) {
+        const a = (i / 9) * Math.PI * 2 + srand() * 0.4;
+        add(B(4 + srand() * 6, 2 + srand() * 2, 3), lam(0x4a3626), Math.cos(a) * 6, 0.6, Math.sin(a) * 6, srand() * 0.5, -a, 0.3 + srand() * 0.4);
+      }
+      rubble(30, 16, lam(0x5a4430), 1.6);
+    }
   }
 
   // ---- particle funnel above the stair
@@ -366,6 +547,106 @@
       gl_FragColor = vec4(tint * v * gain * edge + vec3(0.015, 0.006, 0.004), 1.0);
     }`;
 
+  // cut a word into weathered stone. Returns the stone face (letters recessed into it),
+  // a glow map (just the cuts, for when the door is hovered) and a clean overlay
+  // (letters only, with chunks missing, drawn sharp over the print).
+  function carving(word, aspect, seed) {
+    const crand = P.mulberry32(seed * 131 + 7);
+    const W = 1024, H = Math.round(W / aspect);
+    const mk = () => { const c = document.createElement('canvas'); c.width = W; c.height = H; return c; };
+    const font = (g, size) => { g.font = `bold ${size}px "Times New Roman", Times, serif`; };
+    const cv = mk(), g = cv.getContext('2d');
+    // letters as a mask first
+    const lm = mk(), lg = lm.getContext('2d');
+    let size = Math.floor(H * 0.74);
+    font(lg, size);
+    const spacing = size * 0.12;
+    const widthOf = () => [...word].reduce((a, ch) => a + lg.measureText(ch).width, 0) + spacing * (word.length - 1);
+    while (widthOf() > W * 0.9) { size -= 2; font(lg, size); }
+    let x = (W - widthOf()) / 2;
+    const y = H / 2 + size * 0.36;
+    lg.fillStyle = '#fff';
+    const spots = [];
+    for (const ch of word) {
+      // each letter sits a hair off, as if cut by hand
+      lg.save();
+      lg.translate(x, y + (crand() - 0.5) * size * 0.05);
+      lg.rotate((crand() - 0.5) * 0.04);
+      lg.fillText(ch, 0, 0);
+      lg.restore();
+      spots.push(x + lg.measureText(ch).width / 2);
+      x += lg.measureText(ch).width + spacing;
+    }
+    // time has taken bites out of them
+    lg.globalCompositeOperation = 'destination-out';
+    for (let k = 0; k < 4 + word.length; k++) {
+      lg.beginPath();
+      const cx = spots[Math.floor(crand() * spots.length)] + (crand() - 0.5) * size * 0.7;
+      const cy = H / 2 + (crand() - 0.5) * size * 0.9;
+      const r = size * (0.03 + crand() * 0.08);
+      for (let a = 0; a < 7; a++) {
+        const ang = (a / 7) * Math.PI * 2, rr = r * (0.6 + crand() * 0.6);
+        a ? lg.lineTo(cx + Math.cos(ang) * rr, cy + Math.sin(ang) * rr) : lg.moveTo(cx + Math.cos(ang) * rr, cy + Math.sin(ang) * rr);
+      }
+      lg.fill();
+    }
+    // and a crack or two runs straight through
+    lg.lineWidth = size * 0.035;
+    lg.strokeStyle = '#000';
+    for (let k = 0; k < 1; k++) {
+      lg.beginPath();
+      let px = W * (0.15 + crand() * 0.7), py = 0;
+      lg.moveTo(px, py);
+      while (py < H) { px += (crand() - 0.5) * size * 0.5; py += size * (0.15 + crand() * 0.2); lg.lineTo(px, py); }
+      lg.stroke();
+    }
+    lg.globalCompositeOperation = 'source-over';
+
+    // the stone
+    g.fillStyle = '#6e5a44'; g.fillRect(0, 0, W, H);
+    for (let k = 0; k < W * H / 260; k++) {
+      g.fillStyle = crand() < 0.5 ? `rgba(20,10,4,${0.15 + crand() * 0.25})` : `rgba(210,180,130,${0.08 + crand() * 0.14})`;
+      g.fillRect(crand() * W, crand() * H, 2 + crand() * 9, 1 + crand() * 3);
+    }
+    // weather streaks running down
+    for (let k = 0; k < 40; k++) {
+      g.fillStyle = `rgba(30,18,8,${0.05 + crand() * 0.12})`;
+      g.fillRect(crand() * W, 0, 2 + crand() * 6, H * (0.3 + crand() * 0.7));
+    }
+    // cut: dark floor of the groove, a lit lower lip, a shadowed upper lip
+    const tint = (color, dx, dy) => {
+      const t = mk(), tg = t.getContext('2d');
+      tg.drawImage(lm, dx, dy);
+      tg.globalCompositeOperation = 'source-in';
+      tg.fillStyle = color; tg.fillRect(0, 0, W, H);
+      return t;
+    };
+    g.drawImage(tint('rgba(230,200,150,0.55)', 0, 5), 0, 0);   // light catching the lower edge of each cut
+    g.drawImage(tint('rgba(8,4,2,0.95)', 0, -3), 0, 0);        // shadow inside the top of the groove
+    g.drawImage(tint('rgba(28,16,8,0.92)', 0, 0), 0, 0);       // the groove itself
+    // lichen and grime sitting in the letters
+    g.globalCompositeOperation = 'source-atop';
+    g.globalCompositeOperation = 'source-over';
+    for (let k = 0; k < 160; k++) {
+      g.fillStyle = `rgba(${70 + crand() * 30},${80 + crand() * 30},${50},${0.08 + crand() * 0.12})`;
+      g.beginPath(); g.arc(crand() * W, crand() * H, 2 + crand() * 9, 0, 6.28); g.fill();
+    }
+    const stone = new THREE.CanvasTexture(cv);
+    stone.anisotropy = 4;
+
+    // glow: the cuts only, so the letters can smoulder when the door is hovered
+    const glow = new THREE.CanvasTexture(tint('#fff', 0, 0));
+    // clean overlay: pale letters with a dark edge, faint, partly eaten
+    const cl = mk(), cg = cl.getContext('2d');
+    cg.drawImage(tint('rgba(0,0,0,0.9)', 2, 3), 0, 0);
+    cg.drawImage(tint('#fff', 0, 0), 0, 0);
+    cg.globalCompositeOperation = 'destination-out';
+    for (let k = 0; k < 300; k++) { cg.fillStyle = `rgba(0,0,0,${0.3 + crand() * 0.6})`; cg.fillRect(crand() * W, crand() * H, 2 + crand() * 7, 2 + crand() * 5); }
+    const clean = new THREE.CanvasTexture(cl);
+    clean.anisotropy = 4;
+    return { stone, glow, clean };
+  }
+
   GATES.forEach((cfg, i) => {
     const theta = (i - 1.5) * GATE_SPREAD;
     const group = new THREE.Group();
@@ -384,11 +665,12 @@
     const right = left.clone();
     right.position.x = 3.05;
     right.rotation.z = -0.02;
-    const face = new THREE.MeshLambertMaterial({
-      map: P.canvasTexture(128, 32, (g, w, h) => { P.stoneFill(g, w, h, '#6a5640', rand); P.inscribe(g, cfg.numeral, 64, 17, 26); }),
-    });
-    const lintel = new THREE.Mesh(new THREE.BoxGeometry(8.6, 1.6, 2.3), [stone, stone, stone, stone, face, stone]);
-    lintel.position.y = 10.2;
+    // the name cut into the lintel: recessed letters, chipped, cracked, part crumbled
+    const LW = 8.6, LH = 2.4;
+    const carve = carving(cfg.name, LW / LH, i);
+    const face = new THREE.MeshLambertMaterial({ map: carve.stone, emissive: 0xff7a30, emissiveIntensity: 0, emissiveMap: carve.glow });
+    const lintel = new THREE.Mesh(new THREE.BoxGeometry(LW, LH, 2.3), [stone, stone, stone, stone, face, stone]);
+    lintel.position.y = 10.6;
     lintel.rotation.z = (i % 2 ? 1 : -1) * 0.018;
 
     const portalMat = new THREE.ShaderMaterial({
@@ -401,6 +683,17 @@
     });
     const portal = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 8.8), portalMat);
     portal.position.set(0, 5.0, 0);
+
+    // the same letters, faint and sharp, so they survive the print (clean layer)
+    const lintelMask = new THREE.Mesh(lintel.geometry, new THREE.MeshBasicMaterial({ colorWrite: false }));
+    lintelMask.layers.set(1);
+    lintel.add(lintelMask);
+    const letters = new THREE.Mesh(new THREE.PlaneGeometry(LW, LH),
+      new THREE.MeshBasicMaterial({ map: carve.clean, transparent: true, opacity: 0.72, depthWrite: false, color: 0xd8c6a0 }));
+    letters.position.z = 1.16;
+    letters.layers.set(1);
+    letters.renderOrder = 2;
+    lintel.add(letters);
 
     group.add(plinth, left, right, lintel, portal);
     for (const part of [plinth, left, right, lintel]) { part.castShadow = true; part.receiveShadow = true; }
@@ -419,10 +712,92 @@
     gates.push({
       cfg, theta, group, portalMat, light,
       anchor: new THREE.Vector3(gx, gy + 14.2, gz),
-      label: document.querySelector(`.pin[data-gate="${i}"]`),
+      face, letters,
       hover: 0,
     });
   });
+
+  // ---------------------------------------------------------------- the old path
+  // Barely there: a pale trodden line from where you stand that splits four
+  // ways toward the doors, mostly worn into the dirt, with a few sunken paving
+  // stones still showing and long stretches gone altogether.
+  {
+    const prand = P.mulberry32(8128);
+    // the ground mesh is a coarse grid, so sample its actual surface, not the smooth function
+    const CELL = 3200 / 220;
+    const meshY = (x, z) => {
+      const gx = (x + 1600) / CELL, gz = (z + 1600) / CELL;
+      const ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz;
+      const h = (i, k) => groundHeight(i * CELL - 1600, k * CELL - 1600);
+      // PlaneGeometry splits each cell along the same diagonal
+      if (fx + fz <= 1) return h(ix, iz) + (h(ix + 1, iz) - h(ix, iz)) * fx + (h(ix, iz + 1) - h(ix, iz)) * fz;
+      return h(ix + 1, iz + 1) + (h(ix, iz + 1) - h(ix + 1, iz + 1)) * (1 - fx) + (h(ix + 1, iz) - h(ix + 1, iz + 1)) * (1 - fz);
+    };
+    const curves = [];
+    const fork = new THREE.Vector3(0, 0, -GATE_R * 0.42);
+    curves.push({ c: new THREE.QuadraticBezierCurve3(new THREE.Vector3(0.4, 0, 14), new THREE.Vector3(-0.8, 0, -GATE_R * 0.2), fork), w0: 2.8, w1: 2.3 });
+    GATES.forEach((g, i) => {
+      const th = (i - 1.5) * GATE_SPREAD;
+      const end = new THREE.Vector3(Math.sin(th) * GATE_R * 0.93, 0, -Math.cos(th) * GATE_R * 0.93);
+      const mid = fork.clone().lerp(end, 0.5);
+      mid.x += (i - 1.5) * 1.5 + (prand() - 0.5) * 3;
+      mid.z += 2 + prand() * 2;
+      curves.push({ c: new THREE.QuadraticBezierCurve3(fork.clone(), mid, end), w0: 2.2, w1: 1.6 });
+    });
+
+    // the worn strip: a ribbon laid on the ground, eaten away by noise
+    const mat = new THREE.MeshLambertMaterial({ vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide,
+      polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+    mat.onBeforeCompile = (sh) => {
+      sh.vertexShader = 'attribute vec2 pathUv;\nvarying vec2 vPath;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvPath = pathUv;');
+      sh.fragmentShader = 'varying vec2 vPath;\n' + P.GLSL_NOISE + sh.fragmentShader.replace('#include <dithering_fragment>', `#include <dithering_fragment>
+        // across: soft edges; along: worn to nothing in long patches
+        float across = 1.0 - smoothstep(0.3, 1.0, abs(vPath.y));
+        float wear = smoothstep(0.24, 0.52, fbm(vec2(vPath.x * 0.07, vPath.y * 0.5)));
+        float grit = 0.75 + 0.25 * noise(vPath * vec2(0.8, 2.0));
+        float a = across * wear * grit * 0.92;
+        if (a < 0.01) discard;
+        gl_FragColor.a = a;`);
+    };
+    // packed earth: dried paler and finer than the loose dirt around it
+    const pale = new THREE.Color(0x9a8a6e), dark = new THREE.Color(0x86745a);
+    const STEP = 0.7;
+    curves.forEach(({ c, w0, w1 }, ci) => {
+      const len = c.getLength();
+      const n = Math.max(8, Math.ceil(len / STEP));
+      const pos = [], col = [], puv = [], idx = [];
+      const p = new THREE.Vector3(), t = new THREE.Vector3(), side = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
+      const cc = new THREE.Color();
+      for (let k = 0; k <= n; k++) {
+        const u = k / n;
+        c.getPointAt(u, p);
+        c.getTangentAt(u, t);
+        side.crossVectors(t, up).normalize();
+        // the trail wanders a little and narrows toward each door
+        const wob = (P.vnoise(ci * 7 + u * len * 0.08, 3) - 0.5) * 1.2;
+        const w = (w0 + (w1 - w0) * u) * (0.8 + 0.4 * P.vnoise(u * len * 0.15, ci + 9));
+        for (const sgn of [-1, 1]) {
+          const x = p.x + side.x * (sgn * w / 2 + wob), z = p.z + side.z * (sgn * w / 2 + wob);
+          pos.push(x, meshY(x, z) + 0.05, z);
+          cc.copy(dark).lerp(pale, 0.4 + 0.6 * prand());
+          col.push(cc.r, cc.g, cc.b);
+          puv.push(u * len + ci * 37, sgn);
+        }
+        if (k < n) { const a0 = k * 2; idx.push(a0, a0 + 2, a0 + 1, a0 + 1, a0 + 2, a0 + 3); }
+      }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+      g.setAttribute('pathUv', new THREE.Float32BufferAttribute(puv, 2));
+      g.setIndex(idx);
+      g.computeVertexNormals();
+      const m = new THREE.Mesh(g, mat);
+      m.receiveShadow = true;
+      m.renderOrder = 1;
+      scene.add(m);
+    });
+
+  }
 
   // ---------------------------------------------------------------- time of day (preview)
 
@@ -477,8 +852,10 @@
   // ---------------------------------------------------------------- plate + input
 
   const fx = { blinkT: -1, flash: 0 };
+  const birds = P.birds(scene, camera);
+  window.__birds = birds;
   const plate = P.create({
-    scene, camera, fov: [62, 82],
+    scene, camera, fov: [62, 82], clean: true,
     onNav(href) {
       const i = GATES.findIndex((g) => g.href === href);
       if (i < 0) return false;
@@ -487,7 +864,7 @@
     },
     onReturn() { travel = null; camera.position.copy(HOME); },
     omens: {
-      extras: [(t) => { fx.blinkT = t; }, () => { if (!P.reduceMotion) fx.flash = 1; }],
+      extras: [() => birds.launch(), () => birds.launch(), (t) => { fx.blinkT = t; }, () => { if (!P.reduceMotion) fx.flash = 1; }],
     },
   });
   if (!plate) return;
@@ -531,6 +908,7 @@
 
   const tmp = new THREE.Vector3();
   plate.run((dt, t) => {
+    birds.update(dt, t);
     look.update(dt, t);
     if (!travel) { view.yaw = look.yaw; view.pitch = BASE_PITCH + look.pitch; }
     P.aim(camera, view.yaw, view.pitch);
@@ -556,6 +934,7 @@
       if (b >= 1) fx.blinkT = -1;
     }
     funnelMat.uniforms.uTime.value = t;
+    if (sightTick) sightTick(t);
     ashMat.uniforms.uTime.value = t;
     P.animateFlames(scene, t);
 
@@ -564,8 +943,9 @@
       g.portalMat.uniforms.uTime.value = t;
       g.portalMat.uniforms.uHover.value = g.hover;
       g.light.intensity = 26 + 10 * vnoise(t * 7 + i * 10, 0.5) + 40 * g.hover;
-      P.pin(g.label, g.anchor, camera, { opacity: 0.75 + 0.25 * g.hover });
-      g.label.classList.toggle('lit', hover === i);
+      g.face.emissiveIntensity = g.hover * (0.9 + 0.3 * P.vnoise(t * 6 + i, 4));
+      g.letters.material.opacity = 0.72 + 0.25 * g.hover;
+      g.letters.material.color.setHex(g.hover > 0.5 ? 0xffe0a0 : 0xd8c6a0);
     });
     tmp.set(0, 0, 0);
   });

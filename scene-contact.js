@@ -274,10 +274,12 @@
   // ---------------------------------------------------------------- plate + input
 
   const fx = { flash: 0, blinkT: -1, send: -1 };
+  const birds = P.birds(scene, camera);
+  window.__birds = birds;
   const plate = P.create({
     scene, camera, fov: [52, 70],
     omens: {
-      extras: [(t) => { fx.blinkT = t; }, () => { fx.flash = 1; }],
+      extras: [() => birds.launch(), () => birds.launch(), (t) => { fx.blinkT = t; }, () => { fx.flash = 1; }],
     },
   });
   if (!plate) return;
@@ -307,6 +309,7 @@
   let hoverGrave = false;
 
   plate.run((dt, t) => {
+    birds.update(dt, t);
     look.update(dt, t);
     camera.position.set(CAM.x + look.x * 4, CAM.y + look.y * 1.5, CAM.z);
     camera.lookAt(LOOK.x + look.x * 2, LOOK.y + look.y * 2.5, LOOK.z);

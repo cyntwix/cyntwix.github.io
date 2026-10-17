@@ -391,6 +391,175 @@
   let panelW = 0;
   const strip = { top: 60, bottom: 400 };
   const mob = { d: 30, y: 5.6, look: 2.4 };
+  // ---------------------------------------------------------------- the hand
+  // A skeletal hand punches up out of the field, clutches at the air, and is
+  // dragged back under. The earth heaves where it comes up and clods fly.
+  const bone = new THREE.MeshLambertMaterial({ color: 0xd9ceb4, flatShading: true });
+  const boneDark = new THREE.MeshLambertMaterial({ color: 0xb2a488, flatShading: true });
+  const dirtMat = new THREE.MeshLambertMaterial({ color: 0x3a2a1e, flatShading: true });
+  const handRig = (() => {
+    const root = new THREE.Group();
+    root.visible = false;
+    scene.add(root);
+    const seg = (len, r0, r1, mat = bone) => {
+      const g = new THREE.CylinderGeometry(r1, r0, len, 5, 1);
+      g.translate(0, len / 2, 0);
+      const m = new THREE.Mesh(g, mat);
+      m.castShadow = true;
+      // knuckle at the end
+      const k = new THREE.Mesh(new THREE.IcosahedronGeometry(r1 * 1.25, 0), mat);
+      k.position.y = len;
+      m.add(k);
+      return m;
+    };
+    // forearm: two long bones, slightly crossed
+    const arm = new THREE.Group();
+    root.add(arm);
+    const radius = seg(3.6, 0.2, 0.16); radius.position.x = -0.18; radius.rotation.z = -0.04;
+    const ulna = seg(3.7, 0.17, 0.13, boneDark); ulna.position.x = 0.2; ulna.rotation.z = 0.05;
+    arm.add(radius, ulna);
+    // wrist: a knot of small bones
+    const wrist = new THREE.Group();
+    wrist.position.y = 3.7;
+    arm.add(wrist);
+    for (let i = 0; i < 7; i++) {
+      const c = new THREE.Mesh(new THREE.IcosahedronGeometry(0.13 + Math.random() * 0.06, 0), i % 2 ? bone : boneDark);
+      c.position.set((i % 4 - 1.5) * 0.17, 0.1 + Math.floor(i / 4) * 0.18, (Math.random() - 0.5) * 0.15);
+      wrist.add(c);
+    }
+    // five digits: metacarpal + phalanges, each joint able to curl
+    const fingers = [];
+    const spec = [
+      { x: -0.5, a: 0.75, len: [0.75, 0.55, 0.4], thumb: true },
+      { x: -0.26, a: 0.12, len: [1.0, 0.65, 0.45, 0.32] },
+      { x: -0.02, a: 0.0, len: [1.05, 0.72, 0.48, 0.34] },
+      { x: 0.22, a: -0.1, len: [1.0, 0.66, 0.45, 0.32] },
+      { x: 0.44, a: -0.24, len: [0.9, 0.5, 0.36, 0.28] },
+    ];
+    for (const f of spec) {
+      const joints = [];
+      let parent = wrist;
+      f.len.forEach((L, i) => {
+        const j = new THREE.Group();
+        if (i === 0) { j.position.set(f.x, 0.3, f.thumb ? 0.15 : 0); j.rotation.z = f.a; if (f.thumb) j.rotation.y = 0.6; }
+        else j.position.y = f.len[i - 1];
+        const b = seg(L, 0.085 - i * 0.012, 0.065 - i * 0.01, i % 2 ? boneDark : bone);
+        j.add(b);
+        parent.add(j);
+        joints.push(j);
+        parent = j;
+      });
+      fingers.push({ joints, thumb: !!f.thumb });
+    }
+    // invisible copies on the sharp layer, so the tablet lettering hides behind the bones
+    const meshes = [];
+    root.traverse((o) => { if (o.isMesh) meshes.push(o); });
+    const hide = new THREE.MeshBasicMaterial({ colorWrite: false });
+    meshes.forEach((o) => { const c = new THREE.Mesh(o.geometry, hide); c.layers.set(1); o.add(c); });
+    root.scale.setScalar(0.77);
+    return { root, arm, fingers };
+  })();
+
+  // the ground heaving: a ring of turned earth, and clods thrown up
+  const mound = new THREE.Group();
+  mound.visible = false;
+  scene.add(mound);
+  const moundBits = [];
+  for (let i = 0; i < 14; i++) {
+    const a = (i / 14) * Math.PI * 2;
+    const m = new THREE.Mesh(new THREE.BoxGeometry(0.8 + Math.random() * 0.6, 0.5, 0.6 + Math.random() * 0.5), dirtMat);
+    m.position.set(Math.cos(a) * 0.8, -0.4, Math.sin(a) * 0.8);
+    m.rotation.set(Math.random() * 0.6, -a, 0.4 + Math.random() * 0.5);
+    m.castShadow = true;
+    mound.add(m);
+    moundBits.push(m);
+  }
+  const CLODS = 26;
+  const clods = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), dirtMat, CLODS);
+  clods.castShadow = true;
+  clods.visible = false;
+  scene.add(clods);
+  const clodState = Array.from({ length: CLODS }, () => ({ p: new THREE.Vector3(), v: new THREE.Vector3(), s: 0.2, r: new THREE.Euler(), spin: 0 }));
+
+  const reach = { on: false, t: 0, at: new THREE.Vector3(), lean: 0, turn: 0 };
+  function handOmen() {
+    if (reach.on || P.reduceMotion) return;
+    // somewhere in the open ground in front of the tablets
+        // out in the open ground in front of the tablets, never behind them
+    // the right-hand side of the field, clear of the form
+    let x = narrow() ? 1.5 + Math.random() * 3 : 1.5 + Math.random() * 3;
+    let z = (narrow() ? 7.5 : 8) + Math.random() * 2;
+    reach.at.set(x, 0, z);
+    reach.lean = (Math.random() - 0.5) * 0.5;
+    reach.turn = (Math.random() - 0.5) * 1.2;
+    reach.t = 0;
+    reach.on = true;
+    handRig.root.visible = mound.visible = clods.visible = true;
+    handRig.root.position.copy(reach.at);
+    handRig.root.rotation.set(reach.lean * 0.6, reach.turn, reach.lean);
+    mound.position.copy(reach.at);
+    clodState.forEach((c) => {
+      const a = Math.random() * Math.PI * 2, sp = 2 + Math.random() * 4;
+      c.p.set(reach.at.x + Math.cos(a) * 0.5, 0.1, reach.at.z + Math.sin(a) * 0.5);
+      c.v.set(Math.cos(a) * sp * 0.5, 6 + Math.random() * 7, Math.sin(a) * sp * 0.5);
+      c.s = 0.08 + Math.random() * 0.21;
+      c.r.set(Math.random() * 3, Math.random() * 3, Math.random() * 3);
+      c.spin = (Math.random() - 0.5) * 12;
+    });
+    P.hum.blip(70, 0.5);
+  }
+  const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _s = new THREE.Vector3();
+  function updateHand(dt) {
+    if (!reach.on) return;
+    reach.t += dt;
+    const t = reach.t;
+    // up fast (0.22s), clutch and twitch (to 1.3s), dragged down (to 1.9s)
+    let rise;
+    if (t < 0.22) { const k = t / 0.22; rise = 1 - Math.pow(1 - k, 3); }
+    else if (t < 1.3) rise = 1 + Math.sin((t - 0.22) * 18) * 0.03 * (1.3 - t);
+    else if (t < 1.9) { const k = (t - 1.3) / 0.6; rise = 1 - k * k; }
+    else rise = 0;
+    const H = 5.8 * 0.77;
+    handRig.root.position.y = reach.at.y - H + rise * (H - 0.6);
+    // fingers: splayed on the way up, clench, claw open, clench again going down
+    let curl;
+    if (t < 0.22) curl = 0.1;
+    else if (t < 0.55) curl = 0.1 + ((t - 0.22) / 0.33) * 0.75;
+    else if (t < 0.9) curl = 0.85 - ((t - 0.55) / 0.35) * 0.6;
+    else curl = 0.25 + Math.min(1, (t - 0.9) / 0.5) * 0.7;
+    handRig.fingers.forEach((f, i) => {
+      const lag = i * 0.04;
+      f.joints.forEach((j, k) => {
+        if (k === 0 && !f.thumb) j.rotation.x = -curl * 0.35;
+        else if (k > 0) j.rotation.x = -(curl + Math.sin(t * 30 + i + k) * 0.04 - lag) * (f.thumb ? 0.6 : 1.05);
+      });
+    });
+    handRig.arm.rotation.z = Math.sin(t * 6) * 0.05 * rise;
+
+    // the earth bulges as it breaks through, then settles back over it
+    const heave = t < 0.25 ? t / 0.25 : t < 2.4 ? 1 - Math.max(0, (t - 1.6) / 0.8) * 0.8 : Math.max(0, 0.2 - (t - 2.4) * 0.2);
+    moundBits.forEach((m, i) => { m.position.y = -0.45 + heave * (0.35 + (i % 3) * 0.08); });
+
+    clodState.forEach((c, i) => {
+      if (t > 0.08) {
+        c.v.y -= 22 * dt;
+        c.p.addScaledVector(c.v, dt);
+        if (c.p.y < 0.05) { c.p.y = 0.05; c.v.multiplyScalar(0.3); c.v.y = Math.abs(c.v.y) * 0.3; c.spin *= 0.5; }
+        c.r.x += c.spin * dt; c.r.y += c.spin * 0.6 * dt;
+      }
+      _q.setFromEuler(c.r);
+      _s.setScalar(t > 0.08 ? c.s * Math.min(1, Math.max(0, 3.4 - t)) : 0.0001);
+      _m.compose(c.p, _q, _s);
+      clods.setMatrixAt(i, _m);
+    });
+    clods.instanceMatrix.needsUpdate = true;
+    if (t > 3.4) { reach.on = false; handRig.root.visible = mound.visible = clods.visible = false; }
+  }
+  window.__hand = handOmen;
+  window.__handSeek = (t) => { reach.t = t; };
+
+  const birds = P.birds(scene, camera, { minElev: 0.05, elevRange: 0.1, size: 0.8 });
+  window.__birds = birds;
   const plate = P.create({
     scene, camera, fov: [50, 64], clean: true,
     onResize(vw, vh) {
@@ -412,7 +581,7 @@
       texts: MODE === 'words'
         ? ['writing sketch instrument', 'submit your creation', 'select an amount', 'your words to use']
         : ['stored sketches', 'a small ledger', 'for users, by users', 'make another'],
-      extras: [() => { fx.flash = 1; }, () => spark(8)],
+      extras: [() => birds.launch(), () => birds.launch(), () => handOmen(), () => handOmen(), () => { fx.flash = 1; }, () => spark(8)],
     },
   });
   if (!plate) return;
@@ -443,6 +612,8 @@
 
   let hoverKey = null;
   plate.run((dt, t) => {
+    birds.update(dt, t);
+    updateHand(dt);
     // ease after the cursor
     look.update(dt, t);
     if (narrow()) {
